@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { FloatingInput } from "@/components/ui/input";
 import { useLoginMutation } from "@/features/auth/authApiSlice";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { userLoggedIn } from "@/features/auth/authSlice";
 
@@ -59,18 +59,15 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200">
       <div className="grid min-h-screen lg:grid-cols-2">
-        <div className="hidden lg:flex flex-col justify-between bg-primary p-10 text-white">
+        <div className="hidden lg:flex flex-col justify-between p-10 text-white bg-gradient-to-br from-orange-200 via-yellow-200 to-red-200">
           <div className="mt-auto">
             <img
-              src="https://static.vecteezy.com/system/resources/thumbnails/060/759/275/small/beautiful-classic-abstract-teamwork-concept-diagram-isolated-element-high-resolution-png.png"
-              className="h-80 object-contain mb-8"
+              src="https://images.vexels.com/media/users/3/200040/isolated/preview/9960585fc70528e037e94ccee1e67363-orange-cat-illustration.png"
+              className="h-80 object-contain mb-6"
             />
-            <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs tracking-[0.2em] uppercase text-white/70">
-              Pawpal
-            </div>
 
-            <div className="mt-8 max-w-xl">
-              <h1 className="text-5xl font-semibold leading-tight">
+            <div className="max-w-xl">
+              <h1 className="text-5xl text-orange-800 font-semibold leading-tight">
                 Pawpal helps stray animals finding their loving homes.
               </h1>
               <p className="mt-5 text-base leading-7 text-white/70"></p>
@@ -181,6 +178,12 @@ const LoginPage = () => {
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
+              <Link
+                to="/sign-up"
+                className="text-sm font-medium text-slate-900 underline underline-offset-4 transition hover:text-slate-700 flex items-center justify-center mt-6"
+              >
+                Create New Account
+              </Link>
             </div>
           </div>
         </div>

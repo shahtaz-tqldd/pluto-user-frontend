@@ -41,10 +41,6 @@ export const routes = createBrowserRouter([
     element: <RegisterPage />,
   },
   {
-    path: "/admin/register",
-    element: <RegisterPage />,
-  },
-  {
     path: "/forget-password",
     element: <ForgotPasswordPage />,
   },

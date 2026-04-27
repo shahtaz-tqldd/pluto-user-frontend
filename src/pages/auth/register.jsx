@@ -1,107 +1,60 @@
 import React from "react";
 import toast from "react-hot-toast";
 import { Controller, useForm } from "react-hook-form";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { FloatingInput } from "@/components/ui/input";
-import {
-  useAdminRegisterMutation,
-  useLazyVerifyAdminInvitationQuery,
-} from "@/features/auth/authApiSlice";
+import { useRegistrationMutation } from "@/features/auth/authApiSlice";
+
+const getRegistrationError = (error) => {
+  const responseError = error?.data?.error;
+
+  if (Array.isArray(responseError)) {
+    return responseError[0];
+  }
+
+  if (typeof responseError === "string") {
+    return responseError;
+  }
+
+  return (
+    error?.data?.message ||
+    error?.data?.detail ||
+    "Failed to complete registration."
+  );
+};
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || "";
-  const [verificationError, setVerificationError] = React.useState("");
-  const [verifiedInvitation, setVerifiedInvitation] = React.useState(null);
-  const [verifyInvitation, { isFetching: isVerifying }] =
-    useLazyVerifyAdminInvitationQuery();
-  const [adminRegister, { isLoading: isSubmitting }] =
-    useAdminRegisterMutation();
+  const [registration, { isLoading }] = useRegistrationMutation();
 
   const {
     control,
     handleSubmit,
     getValues,
-    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
+      role: "adopter",
+      name: "",
       email: "",
-      first_name: "",
-      last_name: "",
       password: "",
       confirm_password: "",
     },
   });
 
-  React.useEffect(() => {
-    const runVerification = async () => {
-      if (!token) {
-        setVerificationError("Invitation token is missing from the URL.");
-        setVerifiedInvitation(null);
-        reset({
-          email: "",
-          first_name: "",
-          last_name: "",
-          password: "",
-          confirm_password: "",
-        });
-        return;
-      }
-
-      try {
-        const response = await verifyInvitation(token).unwrap();
-        const invitationData = response?.data || response;
-        const invitedEmail = invitationData?.email || "";
-
-        setVerifiedInvitation(invitationData);
-        setVerificationError("");
-        reset({
-          email: invitedEmail,
-          first_name: "",
-          last_name: "",
-          password: "",
-          confirm_password: "",
-        });
-      } catch (error) {
-        setVerifiedInvitation(null);
-        setVerificationError(
-          error?.data?.message ||
-            error?.data?.error ||
-            "Invitation link is invalid or expired.",
-        );
-        reset({
-          email: "",
-          first_name: "",
-          last_name: "",
-          password: "",
-          confirm_password: "",
-        });
-      }
-    };
-
-    runVerification();
-  }, [reset, token, verifyInvitation]);
-
   const onSubmit = async (data) => {
-    if (!token || !verifiedInvitation) {
-      toast.error("Verify the invitation link before registering.");
-      return;
-    }
-
     if (data.password !== data.confirm_password) {
       toast.error("Passwords do not match.");
       return;
     }
 
     try {
-      const response = await adminRegister({
-        token,
-        first_name: data.first_name.trim(),
-        last_name: data.last_name.trim(),
+      const response = await registration({
+        role: data.role.toUpperCase(),
+        name: data.name.trim(),
+        email: data.email.trim(),
         password: data.password,
         confirm_password: data.confirm_password,
       }).unwrap();
@@ -113,31 +66,25 @@ const RegisterPage = () => {
       );
       navigate("/login", { replace: true });
     } catch (error) {
-      toast.error(
-        error?.data?.message ||
-          error?.data?.error ||
-          "Failed to complete registration.",
-      );
+      toast.error(getRegistrationError(error));
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200">
       <div className="grid min-h-screen lg:grid-cols-2">
-        <div className="hidden lg:flex flex-col justify-between bg-primary p-10 text-white">
+        <div className="hidden lg:flex flex-col justify-between p-10 text-white bg-gradient-to-br from-orange-200 via-yellow-200 to-red-200">
           <div className="mt-auto">
-            <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs tracking-[0.2em] uppercase text-white/70">
-              Pawpal
-            </div>
+            <img
+              src="https://images.vexels.com/media/users/3/200040/isolated/preview/9960585fc70528e037e94ccee1e67363-orange-cat-illustration.png"
+              className="h-80 object-contain mb-6"
+            />
 
-            <div className="mt-8 max-w-xl">
-              <h1 className="text-5xl font-semibold leading-tight">
-                Complete your admin invitation and access the dashboard.
+            <div className="max-w-xl">
+              <h1 className="text-5xl text-orange-800 font-semibold leading-tight">
+                Pawpal helps stray animals finding their loving homes.
               </h1>
-              <p className="mt-5 text-base leading-7 text-white/70">
-                Verify your invitation, set your profile details, and finish
-                account setup securely.
-              </p>
+              <p className="mt-5 text-base leading-7 text-white/70"></p>
             </div>
           </div>
         </div>
@@ -150,68 +97,86 @@ const RegisterPage = () => {
                   Pawpal
                 </p>
                 <h2 className="mt-2 text-3xl font-semibold text-slate-900">
-                  Registration
+                  Create account
                 </h2>
                 <p className="mt-2 text-sm text-slate-500">
-                  Finish registration using the invitation email link.
+                  Sign up to start using your Pawpal account.
                 </p>
               </div>
 
-              {isVerifying && (
-                <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-                  Verifying invitation link...
-                </div>
-              )}
-
-              {verificationError && (
-                <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-                  {verificationError}
-                </div>
-              )}
-
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <Controller
-                  name="email"
+                  name="role"
                   control={control}
+                  rules={{ required: "Role is required" }}
+                  render={({ field }) => (
+                    <div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {["adopter", "rescuer"].map((role) => (
+                          <label
+                            key={role}
+                            className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                              field.value === role
+                                ? "border-primary bg-primary/5 text-primary ring-4 ring-primary/10"
+                                : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={field.name}
+                              value={role}
+                              checked={field.value === role}
+                              onChange={() => field.onChange(role)}
+                              onBlur={field.onBlur}
+                              className="size-4 accent-primary"
+                            />
+                            as {role === "adopter" ? "an" : "a"} {role}
+                          </label>
+                        ))}
+                      </div>
+                      {errors.role?.message && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {errors.role.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
+
+                <Controller
+                  name="name"
+                  control={control}
+                  rules={{ required: "Name is required" }}
                   render={({ field }) => (
                     <FloatingInput
                       {...field}
-                      label="Invited Email"
-                      type="email"
-                      disabled
+                      label="Name"
+                      autoComplete="name"
+                      error={errors.name?.message}
                     />
                   )}
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Controller
-                    name="first_name"
-                    control={control}
-                    rules={{ required: "First name is required" }}
-                    render={({ field }) => (
-                      <FloatingInput
-                        {...field}
-                        label="First Name"
-                        error={errors.first_name?.message}
-                        disabled={!verifiedInvitation}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    name="last_name"
-                    control={control}
-                    rules={{ required: "Last name is required" }}
-                    render={({ field }) => (
-                      <FloatingInput
-                        {...field}
-                        label="Last Name"
-                        error={errors.last_name?.message}
-                        disabled={!verifiedInvitation}
-                      />
-                    )}
-                  />
-                </div>
+                <Controller
+                  name="email"
+                  control={control}
+                  rules={{
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: "Enter a valid email address",
+                    },
+                  }}
+                  render={({ field }) => (
+                    <FloatingInput
+                      {...field}
+                      label="Email Address"
+                      type="email"
+                      autoComplete="email"
+                      error={errors.email?.message}
+                    />
+                  )}
+                />
 
                 <Controller
                   name="password"
@@ -219,8 +184,8 @@ const RegisterPage = () => {
                   rules={{
                     required: "Password is required",
                     minLength: {
-                      value: 8,
-                      message: "Password must be at least 8 characters",
+                      value: 6,
+                      message: "Password must be at least 6 characters",
                     },
                   }}
                   render={({ field }) => (
@@ -228,8 +193,8 @@ const RegisterPage = () => {
                       {...field}
                       label="Password"
                       type="password"
+                      autoComplete="new-password"
                       error={errors.password?.message}
-                      disabled={!verifiedInvitation}
                     />
                   )}
                 />
@@ -248,25 +213,23 @@ const RegisterPage = () => {
                       {...field}
                       label="Confirm Password"
                       type="password"
+                      autoComplete="new-password"
                       error={errors.confirm_password?.message}
-                      disabled={!verifiedInvitation}
                     />
                   )}
                 />
 
                 <Button
                   type="submit"
-                  disabled={!verifiedInvitation || isVerifying || isSubmitting}
+                  disabled={isLoading}
                   className="w-full h-11"
                 >
-                  {isSubmitting
-                    ? "Completing registration..."
-                    : "Complete Registration"}
+                  {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
 
               <p className="mt-6 text-center text-sm text-slate-500">
-                Already have access?{" "}
+                Already have an account?{" "}
                 <Link
                   to="/login"
                   className="font-medium text-slate-900 underline underline-offset-4"
