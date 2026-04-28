@@ -1,4 +1,14 @@
-const uniqueValues = (items) => [...new Set(items)].sort((a, b) => a.localeCompare(b));
+const titleCase = (value) =>
+  value
+    ? value
+        .toString()
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "";
+
+const uniqueValues = (items) =>
+  [...new Set(items.filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
 export const buildTypeOptions = (pets) => uniqueValues(pets.map((pet) => pet.petType));
 
@@ -27,7 +37,7 @@ export const filterPets = (pets, filters) => {
         pet.breed,
         pet.location,
         pet.area,
-      ].some((value) => value.toLowerCase().includes(normalizedSearch));
+      ].some((value) => value?.toLowerCase().includes(normalizedSearch));
 
     const matchesType = petType === "all" || pet.petType === petType;
     const matchesBreed = breed === "all" || pet.breed === breed;
@@ -77,4 +87,51 @@ export const getDaysSinceUpload = (uploadedAt) => {
   }
 
   return `Uploaded ${days} days ago`;
+};
+
+export const normalizePetListResponse = (response) => {
+  const pets = Array.isArray(response?.data) ? response.data : [];
+
+  return pets.map((pet) => {
+    const images = [
+      pet.primary_image,
+      ...(Array.isArray(pet.images)
+        ? pet.images
+            .slice()
+            .sort((left, right) => left.sort_order - right.sort_order)
+            .map((image) => image.image_url)
+        : []),
+    ].filter(Boolean);
+    const uniqueImages = [...new Set(images)];
+    const petType = titleCase(pet.species);
+    const status = titleCase(pet.status);
+    const gender = titleCase(pet.gender);
+    const size = titleCase(pet.size);
+    const location = pet.current_location || "Location not set";
+
+    return {
+      id: pet.id,
+      name: pet.title || "Unnamed pet",
+      label: [pet.age, gender, size].filter(Boolean).join(" • "),
+      petType,
+      breed: pet.breed || "",
+      age: pet.age || `${pet.age_months ?? 0} months`,
+      gender,
+      size,
+      color: pet.color || "",
+      location,
+      area: location,
+      status,
+      available: pet.status === "AVAILABLE",
+      interestedCount: pet.interested_count ?? 0,
+      activeChats: pet.active_chats ?? 0,
+      isNearby: true,
+      uploadedAt: pet.created_at,
+      rescuerName: pet.rescuer_name || "Community rescuer",
+      rescueNote: pet.medical_notes || pet.story || "No extra notes yet.",
+      description: pet.story || "No story added yet.",
+      images: uniqueImages,
+      rawPet: pet,
+    };
+  });
 };

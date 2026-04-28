@@ -9,21 +9,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { petFeedData } from "./data/pet-feed-data";
 import {
   buildAreaOptions,
-  buildBreedOptions,
   buildTypeOptions,
   filterPets,
+  normalizePetListResponse,
 } from "./utils/feed-utils";
 import QuickFilters from "./components/quick-filters";
-import FeedSummary from "./components/feed-summary";
 import PetCard from "./components/pet-card";
 import PetDetailsDialog from "./components/pet-details-dialog";
 import EmptyFeedState from "./components/empty-feed-state";
 import RightSidebar from "./components/right-sidebar";
 import LeftSideBar from "./components/left-sidebar";
 import CreatePetPostDialog from "@/features/pets/components/create-pet-post-dialog";
+import { usePetListQuery } from "@/features/pets/petApiSlice";
 
 const quickFilterOptions = [
   {
@@ -52,21 +51,19 @@ const FeedPage = () => {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [quickFilter, setQuickFilter] = React.useState("all");
   const [petType, setPetType] = React.useState("all");
-  const [breed, setBreed] = React.useState("all");
   const [area, setArea] = React.useState("all");
   const [selectedPet, setSelectedPet] = React.useState(null);
 
-  const typeOptions = buildTypeOptions(petFeedData);
-  const breedOptions = buildBreedOptions(petFeedData, petType);
-  const areaOptions = buildAreaOptions(petFeedData);
-  const activeBreed =
-    breed === "all" || breedOptions.includes(breed) ? breed : "all";
+  const { data, isError, isLoading } = usePetListQuery();
+  const pets = React.useMemo(() => normalizePetListResponse(data), [data]);
+  const typeOptions = buildTypeOptions(pets);
+  const areaOptions = buildAreaOptions(pets);
 
-  const filteredPets = filterPets(petFeedData, {
+  const filteredPets = filterPets(pets, {
     searchTerm,
     quickFilter,
     petType,
-    breed: activeBreed,
+    breed: "all",
     area,
   });
 
@@ -100,7 +97,7 @@ const FeedPage = () => {
                     <Input
                       value={searchTerm}
                       onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Search by pet name, breed, or location"
+                      placeholder="Search by pet name, type, or location"
                       className="h-9 rounded-full border-primary/15 bg-[#fcfdfb] pl-10 text-sm shadow-none focus-visible:ring-primary/15"
                     />
                   </label>
@@ -148,7 +145,11 @@ const FeedPage = () => {
 
         <div className="min-w-0 flex-1 space-y-5 pb-8">
           <section className="space-y-5">
-            {filteredPets.length > 0 ? (
+            {isLoading ? (
+              <FeedStatusCard message="Loading pets..." />
+            ) : isError ? (
+              <FeedStatusCard message="Could not load pets right now." />
+            ) : filteredPets.length > 0 ? (
               filteredPets.map((pet) => (
                 <PetCard
                   key={pet.id}
@@ -162,7 +163,6 @@ const FeedPage = () => {
                   setSearchTerm("");
                   setQuickFilter("all");
                   setPetType("all");
-                  setBreed("all");
                   setArea("all");
                 }}
               />
@@ -171,7 +171,7 @@ const FeedPage = () => {
         </div>
 
         <RightSidebar
-          pets={filteredPets.length > 0 ? filteredPets : petFeedData}
+          pets={filteredPets.length > 0 ? filteredPets : pets}
           className="max-w-sm w-full"
         />
       </div>
@@ -186,6 +186,14 @@ const FeedPage = () => {
         }}
       />
     </>
+  );
+};
+
+const FeedStatusCard = ({ message }) => {
+  return (
+    <div className="rounded-[28px] border border-primary/10 bg-white px-6 py-10 text-center text-sm font-medium text-slate-500 shadow-[0_16px_50px_rgba(2,24,19,0.05)]">
+      {message}
+    </div>
   );
 };
 

@@ -59,18 +59,17 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200">
       <div className="grid min-h-screen lg:grid-cols-2">
-        <div className="hidden lg:flex flex-col justify-between p-10 text-white bg-gradient-to-br from-orange-200 via-yellow-200 to-red-200">
-          <div className="mt-auto">
+        <div className="hidden lg:flex items-center justify-center p-4">
+          <div>
             <img
               src="https://images.vexels.com/media/users/3/200040/isolated/preview/9960585fc70528e037e94ccee1e67363-orange-cat-illustration.png"
               className="h-80 object-contain mb-6"
             />
 
             <div className="max-w-xl">
-              <h1 className="text-5xl text-orange-800 font-semibold leading-tight">
+              <h1 className="text-4xl text-orange-800 font-semibold leading-tight">
                 Pawpal helps stray animals finding their loving homes.
               </h1>
-              <p className="mt-5 text-base leading-7 text-white/70"></p>
             </div>
           </div>
         </div>

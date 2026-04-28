@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MapPin, MessageCircle, PawPrint, ShieldCheck, Users } from "lucide-react";
 import { getDaysSinceUpload } from "../utils/feed-utils";
+import PetImageCarousel from "./pet-image-carousel";
 
 const PetDetailsDialog = ({ pet, open, onOpenChange }) => {
   return (
@@ -17,10 +18,11 @@ const PetDetailsDialog = ({ pet, open, onOpenChange }) => {
         {pet ? (
           <div className="grid gap-0 lg:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.05fr)]">
             <div className="relative min-h-[260px] bg-[#eef8f2]">
-              <img
-                src={pet.image}
-                alt={`${pet.name} illustration`}
-                className="h-full w-full object-cover"
+              <PetImageCarousel
+                key={pet.id}
+                images={pet.images}
+                alt={`${pet.name} photos`}
+                className="min-h-[260px]"
               />
               <div className="absolute inset-x-0 top-0 flex items-start justify-between p-5">
                 <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-slate-800">
@@ -50,7 +52,7 @@ const PetDetailsDialog = ({ pet, open, onOpenChange }) => {
               </DialogHeader>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <InfoTile title="Breed" value={pet.breed} icon={<PawPrint className="size-4" />} />
+                <InfoTile title="Color" value={pet.color || pet.breed} icon={<PawPrint className="size-4" />} />
                 <InfoTile title="Gender" value={pet.gender} icon={<Users className="size-4" />} />
                 <InfoTile title="Age" value={pet.age} icon={<ShieldCheck className="size-4" />} />
                 <InfoTile title="Location" value={pet.location} icon={<MapPin className="size-4" />} />

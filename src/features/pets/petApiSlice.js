@@ -7,11 +7,20 @@ export const petApiSlice = apiSlice.injectEndpoints({
         url: "/pets/",
         method: "POST",
         body: payload,
-        ...(hasImages ? {} : { headers: { "Content-Type": "application/json" } }),
+        ...(hasImages
+          ? {}
+          : { headers: { "Content-Type": "application/json" } }),
       }),
       invalidatesTags: ["pets"],
+    }),
+    petList: builder.query({
+      query: () => ({
+        url: "/pets/",
+        method: "GET",
+      }),
+      providesTags: ["pets"],
     }),
   }),
 });
 
-export const { useCreatePetMutation } = petApiSlice;
+export const { useCreatePetMutation, usePetListQuery } = petApiSlice;

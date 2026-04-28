@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getDaysSinceUpload } from "../utils/feed-utils";
+import PetImageCarousel from "./pet-image-carousel";
 
 const PetCard = ({ pet, onOpenDetails }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
@@ -27,10 +28,10 @@ const PetCard = ({ pet, onOpenDetails }) => {
         </div>
       </div>
       <div className="relative bg-[#eef8f2]">
-        <img
-          src={pet.image}
-          alt={`${pet.name} illustration`}
-          className="h-92 w-full object-cover"
+        <PetImageCarousel
+          images={pet.images}
+          alt={`${pet.name} photos`}
+          className="h-92"
         />
 
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
@@ -104,7 +105,7 @@ const PetCard = ({ pet, onOpenDetails }) => {
             <div className="grid gap-3 sm:grid-cols-2">
               <DetailItem
                 icon={<PawPrint className="size-4" />}
-                value={pet.breed}
+                value={pet.breed || pet.color}
               />
               <DetailItem
                 icon={<Clock3 className="size-4" />}
