@@ -259,9 +259,15 @@ export const getProfileByUsername = (username) =>
 
 export const createSelfProfile = (user, username) => {
   const fullName =
-    `${user?.first_name || ""} ${user?.last_name || ""}`.trim() || "Guest User";
+    user?.name ||
+    `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
+    "Guest User";
   const normalizedRole = (user?.role || "adopter").toLowerCase();
   const role = normalizedRole.includes("rescu") ? "rescuer" : "adopter";
+  const fallbackBio =
+    role === "rescuer"
+      ? "Building a transparent rescue profile with active pet listings, adoption follow-ups, and community trust."
+      : "Building an adopter profile with adoption history, rescuer feedback, and care commitments.";
 
   return {
     username,
@@ -269,6 +275,7 @@ export const createSelfProfile = (user, username) => {
     role,
     name: fullName,
     avatar:
+      user?.avatar ||
       user?.profile_picture_url ||
       createProfileIllustration({
         name: fullName,
@@ -276,11 +283,16 @@ export const createSelfProfile = (user, username) => {
         accentSoft: role === "rescuer" ? "#d7efe2" : "#fbe7d8",
         highlight: role === "rescuer" ? "#ffd66b" : "#0ea5a4",
       }),
-    shortBio:
-      role === "rescuer"
-        ? "Building a transparent rescue profile with active pet listings, adoption follow-ups, and community trust."
-        : "Building an adopter profile with adoption history, rescuer feedback, and care commitments.",
+    cover:
+      user?.cover || user?.cover_image || user?.cover_url || user?.cover_image_url || "",
+    shortBio: user?.bio || fallbackBio,
     location: user?.address || user?.location || "Dhaka",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    jobTitle: user?.job_title || "",
+    isVerified: Boolean(user?.is_verified),
+    status: user?.status || "",
+    joinedAt: user?.date_joined || user?.created_at || "",
     joinedLabel: "Your profile",
     trustScore: role === "rescuer" ? "4.8/5" : "4.6/5",
     responseTime: "Updates from your recent activity",

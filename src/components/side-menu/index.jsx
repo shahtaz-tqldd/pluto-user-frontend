@@ -50,12 +50,6 @@ const SideMenu = () => {
       icon: <Bookmark size={18} />,
     },
     {
-      id: 6,
-      label: "Trust & Reviews",
-      link: "/",
-      icon: <ShieldCheck size={18} />,
-    },
-    {
       id: 7,
       label: "Alerts",
       link: "/",
@@ -113,7 +107,9 @@ const SideMenu = () => {
               )}
 
               <div className="mt-3 space-y-1">
-                <h2 className="text-lg font-semibold text-slate-900">{fullName}</h2>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {fullName}
+                </h2>
                 <p className="text-sm capitalize text-slate-500">{role}</p>
               </div>
 

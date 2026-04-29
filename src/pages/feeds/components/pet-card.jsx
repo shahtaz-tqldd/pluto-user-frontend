@@ -2,6 +2,7 @@ import React from "react";
 import {
   ChevronDown,
   Clock3,
+  Dot,
   Heart,
   MapPin,
   MessageCircleMore,
@@ -19,12 +20,24 @@ const PetCard = ({ pet, onOpenDetails }) => {
   return (
     <article className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.08)] transition-transform duration-300 hover:-translate-y-1">
       <div className="p-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold">
-          {pet.rescuerName
-            .split(" ")
-            .map((part) => part[0])
-            .join("")
-            .slice(0, 2)}
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold">
+            {pet.rescuerName
+              .split(" ")
+              .map((part) => part[0])
+              .join("")
+              .slice(0, 2)}
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold">{pet.rescuerName}</h2>
+            <div className="flex flex-wrap items-center text-xs text-slate-500">
+              <span>
+                {getDaysSinceUpload(pet.uploadedAt).replace("Uploaded ", "")}
+              </span>
+              <Dot />
+              <span>{pet.location}</span>
+            </div>
+          </div>
         </div>
       </div>
       <div className="relative bg-[#eef8f2]">
@@ -60,16 +73,6 @@ const PetCard = ({ pet, onOpenDetails }) => {
       </div>
 
       <div className="p-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs mb-3">
-          <span className="inline-flex items-center gap-1.5">
-            <MapPin className="size-3" />
-            {pet.location}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Clock3 className="size-3" />
-            {getDaysSinceUpload(pet.uploadedAt).replace("Uploaded ", "")}
-          </span>
-        </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-primary/8 px-3 py-1 font-medium text-primary">

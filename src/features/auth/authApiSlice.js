@@ -68,7 +68,7 @@ export const authApiSlice = apiSlice.injectEndpoints({
     updateProfile: builder.mutation({
       query: (payload) => {
         return {
-          url: `/auth/me/update/`,
+          url: `/auth/user-details/update/`,
           method: "PATCH",
           body: payload,
         };
