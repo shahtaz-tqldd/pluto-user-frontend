@@ -1,7 +1,7 @@
 import React from "react";
-import { Clock3, MessageCircleMore, ShieldCheck, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
 import FeedSummary from "./feed-summary";
+import { MessageCircleMore } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const RightSidebar = ({ pets, className }) => {
   const chatThreads = pets

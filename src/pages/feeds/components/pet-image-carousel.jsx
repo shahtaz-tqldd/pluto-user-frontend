@@ -35,9 +35,13 @@ const PetImageCarousel = ({ images = [], alt, className }) => {
   }
 
   return (
-    <div className={cn("group relative h-full w-full overflow-hidden", className)}>
+    <div
+      className={cn("group relative h-full w-full overflow-hidden", className)}
+    >
       <img
-        src={imageList[safeActiveIndex]}
+        src={
+          imageList[safeActiveIndex]["image_url"] || imageList[safeActiveIndex]
+        }
         alt={alt}
         className="h-full w-full object-cover"
       />

@@ -18,31 +18,31 @@ const LeftSideBar = ({ className }) => {
 
   const navItems = [
     {
-      id: 3,
+      id: 1,
       label: "My Profile",
       link: `/profile/${user?.username || "my-profile"}`,
       icon: <UserRound size={18} />,
     },
     {
-      id: 4,
+      id: 2,
       label: "Messages",
       link: "/",
       icon: <MessageSquare size={18} />,
     },
     {
-      id: 5,
+      id: 3,
       label: "Saved Pets",
       link: "/",
       icon: <Bookmark size={18} />,
     },
     {
-      id: 7,
+      id: 4,
       label: "Alerts",
       link: "/",
       icon: <Bell size={18} />,
     },
     {
-      id: 8,
+      id: 5,
       label: "Settings",
       link: "/settings",
       icon: <Settings size={18} />,

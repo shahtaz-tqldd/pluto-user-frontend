@@ -13,6 +13,7 @@ export const petApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["pets"],
     }),
+
     petList: builder.query({
       query: () => ({
         url: "/pets/",
@@ -20,7 +21,28 @@ export const petApiSlice = apiSlice.injectEndpoints({
       }),
       providesTags: ["pets"],
     }),
+
+    petDetails: builder.query({
+      query: (petId) => ({
+        url: `pets/${petId}/`,
+        method: "GET",
+      }),
+      providesTags: ["petDetails"],
+    }),
+
+    rescuerPetList: builder.query({
+      query: ({ status, page, pageSize }) => ({
+        url: `/pets/rescuer-pets/?status=${status}&page=${page}&page_size=${pageSize}`,
+        method: "GET",
+      }),
+      providesTags: ["rescuerPets"],
+    }),
   }),
 });
 
-export const { useCreatePetMutation, usePetListQuery } = petApiSlice;
+export const {
+  useCreatePetMutation,
+  usePetListQuery,
+  useRescuerPetListQuery,
+  usePetDetailsQuery,
+} = petApiSlice;

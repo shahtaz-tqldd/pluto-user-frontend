@@ -237,9 +237,9 @@ const ReviewCard = ({ review }) => {
       <PetReference pet={review.pet} adoption={review.adoption} />
 
       <div className="mt-4 rounded-2xl bg-white/80 p-3">
-        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
+        <div className="mb-2 flex items-center gap-2 text-xs font-medium text-slate-400">
           <MessageSquareText className="size-3.5" />
-          Review comment
+          Comment
         </div>
         <p className="text-sm leading-6 text-slate-600">
           {fallbackValue(review.comment, "No comment added yet.")}
@@ -250,7 +250,7 @@ const ReviewCard = ({ review }) => {
 };
 
 const ProfileReviews = ({ profile }) => {
-  const { data, isLoading, isError } = useReviewListQuery();
+  const { data, isLoading } = useReviewListQuery();
   const apiReviews = getResponseReviews(data);
 
   const reviews = useMemo(() => {
@@ -259,10 +259,6 @@ const ProfileReviews = ({ profile }) => {
     const source = apiReviews.length > 0 ? apiReviews : mockReviews;
     return source.map(normalizeReview);
   }, [apiReviews, isLoading]);
-
-  const averageRating =
-    reviews.reduce((total, review) => total + review.rating, 0) /
-    (reviews.length || 1);
 
   return (
     <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_16px_40px_rgba(2,24,19,0.05)]">
@@ -275,15 +271,6 @@ const ProfileReviews = ({ profile }) => {
             <h2 className="text-lg font-semibold text-slate-900">
               Adoption reviews
             </h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Reviews tied to completed adoptions and the pet involved.
-            </p>
-          </div>
-          <div className="rounded-2xl bg-[#f8fbf9] px-3 py-2 text-right">
-            <p className="text-lg font-semibold text-slate-900">
-              {averageRating ? averageRating.toFixed(1) : "0.0"}
-            </p>
-            <p className="text-xs text-slate-400">{reviews.length} reviews</p>
           </div>
         </div>
       </div>
@@ -295,14 +282,10 @@ const ProfileReviews = ({ profile }) => {
           </div>
         ) : null}
 
-        {isError ? (
-          <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            Showing sample review structure until reviews are available.
-          </div>
-        ) : null}
-
         {reviews.length > 0 ? (
-          reviews.map((review) => <ReviewCard key={review.id} review={review} />)
+          reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))
         ) : (
           <div className="rounded-[24px] border border-primary/10 bg-[#f8fbf9] p-5 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-primary">
@@ -312,8 +295,8 @@ const ProfileReviews = ({ profile }) => {
               No adoption reviews yet
             </p>
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Reviews will appear after an adoption is completed and either
-              side leaves feedback.
+              Reviews will appear after an adoption is completed and either side
+              leaves feedback.
             </p>
           </div>
         )}

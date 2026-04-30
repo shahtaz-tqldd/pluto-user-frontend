@@ -232,7 +232,7 @@ const CreatePetPostDialog = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-[32px] border-primary/10 p-0 shadow-[0_28px_80px_rgba(2,24,19,0.2)] sm:max-w-4xl">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-[24px] border-primary/10 p-0 shadow-[0_28px_80px_rgba(2,24,19,0.2)] sm:max-w-4xl">
         <div className="border-b border-primary/10 bg-[linear-gradient(135deg,_rgba(244,251,247,0.98),_rgba(255,248,240,0.94))] px-6 py-5">
           <div className="flex items-center gap-2">
             <div className="rounded-2xl bg-white p-2 text-primary shadow-sm w-fit">
@@ -254,15 +254,8 @@ const CreatePetPostDialog = ({
           className="flex max-h-[calc(100vh-10rem)] flex-col"
         >
           <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="min-h-0 space-y-5 overflow-y-auto border-r border-slate-100 px-6 py-5">
+            <div className="min-h-0 space-y-5 custom-scrollbar border-r border-slate-100 px-6 py-5">
               <section className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-primary" />
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
-                    Quick publish
-                  </h3>
-                </div>
-
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FloatingSelect
                     label="Species"
@@ -365,16 +358,14 @@ const CreatePetPostDialog = ({
               </section>
             </div>
 
-            <div className="min-h-0 space-y-5 overflow-y-auto bg-[#fbfcfb] px-6 py-5">
+            <div className="min-h-0 space-y-5 custom-scrollbar bg-[#fbfcfb] px-6 py-5">
               <section className="rounded-[24px] border border-primary/10 bg-white p-4">
                 <div className="flex items-center gap-2 text-slate-900">
                   <ImagePlus className="size-4 text-primary" />
-                  <h3 className="text-sm font-semibold">Photos</h3>
+                  <h3 className="text-sm font-semibold">
+                    Upload upto 4 photos
+                  </h3>
                 </div>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  Add up to five images. Posts work without photos, but images
-                  help adopters act faster.
-                </p>
 
                 <label className="mt-4 flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-[24px] border-2 border-dashed border-primary/20 bg-[#f8fbf9] px-4 text-center transition hover:border-primary/40 hover:bg-[#f1f8f4]">
                   <input
@@ -443,7 +434,7 @@ const CreatePetPostDialog = ({
                         <span className="block text-sm font-medium text-slate-900">
                           {item.label}
                         </span>
-                        <span className="block text-sm leading-6 text-slate-500">
+                        <span className="block text-xs text-slate-500">
                           {item.helper}
                         </span>
                       </span>

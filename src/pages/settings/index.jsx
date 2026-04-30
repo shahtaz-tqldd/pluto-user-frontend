@@ -23,10 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  userDetailsFetched,
-  userLoggedOut,
-} from "@/features/auth/authSlice";
+import { userDetailsFetched, userLoggedOut } from "@/features/auth/authSlice";
 import {
   useChangePasswordMutation,
   useUpdateProfileMutation,
@@ -144,7 +141,7 @@ const ProfileInformationSection = ({ user, dispatch }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm p-6">
+    <div className="bg-white rounded-[30px] p-6">
       <div className="flex items-center gap-2 mb-6">
         <User className="w-5 h-5 text-gray-700" />
         <h2 className="text-lg font-semibold">Profile Information</h2>
@@ -333,12 +330,12 @@ const SettingsPage = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 py-6">
       {/* Header */}
       <div className="flbx">
         <div>
-          <Title variant="lg">Account Settings</Title>
-          <Text className="mt-2 text-gray-600">
+          <Title variant="md">Account Settings</Title>
+          <Text className="text-gray-600" variant="sm">
             Manage your account information and preferences
           </Text>
         </div>
@@ -361,7 +358,7 @@ const SettingsPage = () => {
           />
 
           {/* Activity Logs */}
-          <div className="bg-white rounded-lg border shadow-sm p-6">
+          <div className="bg-white rounded-[30px] p-6">
             <div className="flex items-center gap-2 mb-6">
               <Activity className="w-5 h-5 text-gray-700" />
               <h2 className="text-lg font-semibold">Activity Logs</h2>
@@ -404,7 +401,7 @@ const SettingsPage = () => {
 
         <div className="md:col-span-1 col-span-3 space-y-6">
           {/* Change Password */}
-          <div className="bg-white rounded-lg border shadow-sm p-6">
+          <div className="bg-white rounded-[30px] p-6">
             <div className="flex items-center gap-2 mb-6">
               <Lock className="w-5 h-5 text-gray-700" />
               <h2 className="text-lg font-semibold">Change Password</h2>
@@ -445,7 +442,10 @@ const SettingsPage = () => {
               />
 
               <div className="flex justify-end pt-2">
-                <Button onClick={handleSavePassword} disabled={isChangingPassword}>
+                <Button
+                  onClick={handleSavePassword}
+                  disabled={isChangingPassword}
+                >
                   {isChangingPassword ? "Changing..." : "Change Password"}
                 </Button>
               </div>
@@ -453,7 +453,7 @@ const SettingsPage = () => {
           </div>
 
           {/* Security */}
-          <div className="bg-white rounded-lg border shadow-sm p-6">
+          <div className="bg-white rounded-[30px] p-6">
             <div className="flex items-center gap-2 mb-6">
               <Shield className="w-5 h-5 text-gray-700" />
               <h2 className="text-lg font-semibold">Security</h2>
@@ -512,7 +512,7 @@ const SettingsPage = () => {
           </div>
 
           {/* Danger Zone */}
-          <div className="bg-white rounded-lg border border-red-200 shadow-sm p-6">
+          <div className="bg-white rounded-[30px] border border-red-200 p-6">
             <h2 className="text-lg font-semibold text-red-700 mb-4">
               Danger Zone
             </h2>

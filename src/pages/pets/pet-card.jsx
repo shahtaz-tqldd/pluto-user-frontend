@@ -12,8 +12,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { buildPetThreadPath, getDaysSinceUpload } from "../utils/feed-utils";
-import PetImageCarousel from "./pet-image-carousel";
+import {
+  buildPetThreadPath,
+  getDaysSinceUpload,
+} from "../feeds/utils/feed-utils";
+import PetImageCarousel from "../feeds/components/pet-image-carousel";
 
 const PetCard = ({ pet, onOpenDetails }) => {
   const navigate = useNavigate();
@@ -28,7 +31,7 @@ const PetCard = ({ pet, onOpenDetails }) => {
   };
 
   return (
-    <article className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.08)] transition-transform duration-300 hover:-translate-y-1">
+    <article className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.08)] transition-transform duration-300 hover:-translate-y-1 h-fit">
       <div className="p-3">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold">

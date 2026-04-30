@@ -10,7 +10,20 @@ const titleCase = (value) =>
 const uniqueValues = (items) =>
   [...new Set(items.filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
-export const buildTypeOptions = (pets) => uniqueValues(pets.map((pet) => pet.petType));
+export const slugify = (value) =>
+  value
+    ?.toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "pet";
+
+export const buildPetThreadPath = (pet) => `/pets/threads/${pet.id}/`;
+
+export const getPetIdFromSlug = (slug = "") => slug.split("-")[0];
+
+export const buildTypeOptions = (pets) =>
+  uniqueValues(pets.map((pet) => pet.petType));
 
 export const buildBreedOptions = (pets, selectedType) => {
   const breedPool =
@@ -21,7 +34,8 @@ export const buildBreedOptions = (pets, selectedType) => {
   return uniqueValues(breedPool.map((pet) => pet.breed));
 };
 
-export const buildAreaOptions = (pets) => uniqueValues(pets.map((pet) => pet.area));
+export const buildAreaOptions = (pets) =>
+  uniqueValues(pets.map((pet) => pet.area));
 
 export const filterPets = (pets, filters) => {
   const { searchTerm, quickFilter, petType, breed, area } = filters;
