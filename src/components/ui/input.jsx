@@ -63,6 +63,7 @@ function FloatingInput({
                 ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                 : "border-slate-300 focus:border-primary focus:ring-4 focus:ring-primary/10"
             }
+            dark:border-white/15 dark:bg-slate-950 dark:text-white dark:focus:ring-white/10
             ${isPassword ? "pr-12" : ""}
             ${prefix ? "pl-8" : ""}`,
             inputClassName,
@@ -74,7 +75,7 @@ function FloatingInput({
           htmlFor={name}
           className={cn(
             `
-    absolute left-4 top-0 z-10 origin-[0] bg-white px-1 py-1 text-sm text-slate-500 pointer-events-none
+    absolute left-4 top-0 z-10 origin-[0] bg-white px-1 py-1 text-sm text-slate-500 pointer-events-none dark:bg-slate-950 dark:text-slate-400
     transform transition-all duration-200
 
     scale-90 -translate-y-1/2

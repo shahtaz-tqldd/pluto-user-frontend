@@ -4,9 +4,26 @@ import "@/assets/styles/index.css";
 import "@/assets/styles/layout.css";
 import useAuth from "./hooks/useAuth";
 import { Toaster } from "react-hot-toast";
+import { useEffect } from "react";
+import { applyThemePreference, getStoredThemePreference } from "@/lib/theme";
 
 function App() {
   const { isLoading, authChecked } = useAuth();
+
+  useEffect(() => {
+    const applyStoredTheme = () => {
+      applyThemePreference(getStoredThemePreference());
+    };
+
+    applyStoredTheme();
+
+    const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    systemThemeQuery.addEventListener("change", applyStoredTheme);
+
+    return () => {
+      systemThemeQuery.removeEventListener("change", applyStoredTheme);
+    };
+  }, []);
 
   if (!authChecked || isLoading) {
     return (
