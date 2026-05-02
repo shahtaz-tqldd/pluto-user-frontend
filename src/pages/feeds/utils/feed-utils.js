@@ -38,7 +38,16 @@ export const buildAreaOptions = (pets) =>
   uniqueValues(pets.map((pet) => pet.area));
 
 export const filterPets = (pets, filters) => {
-  const { searchTerm, quickFilter, petType, breed, area } = filters;
+  const {
+    searchTerm,
+    quickFilter,
+    petType,
+    breed,
+    area,
+    size = "all",
+    location = "anywhere",
+    color = "all",
+  } = filters;
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
   let filteredPets = pets.filter((pet) => {
@@ -56,11 +65,21 @@ export const filterPets = (pets, filters) => {
     const matchesType = petType === "all" || pet.petType === petType;
     const matchesBreed = breed === "all" || pet.breed === breed;
     const matchesArea = area === "all" || pet.area === area;
+    const matchesSize = size === "all" || pet.size === size;
+    const matchesColor =
+      color === "all" || pet.color?.toLowerCase() === color.toLowerCase();
 
-    return matchesSearch && matchesType && matchesBreed && matchesArea;
+    return (
+      matchesSearch &&
+      matchesType &&
+      matchesBreed &&
+      matchesArea &&
+      matchesSize &&
+      matchesColor
+    );
   });
 
-  if (quickFilter === "nearby") {
+  if (quickFilter === "nearby" || location === "nearby") {
     filteredPets = filteredPets.filter((pet) => pet.isNearby);
   }
 

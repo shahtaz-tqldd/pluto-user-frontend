@@ -5,63 +5,72 @@ import {
   filterPets,
   normalizePetListResponse,
 } from "./utils/feed-utils";
-import PetCard from "./components/pet-card";
 import EmptyFeedState from "./components/empty-feed-state";
 import RightSidebar from "./components/right-sidebar";
 import LeftSideBar from "./components/left-sidebar";
 
 import { usePetListQuery } from "@/features/pets/petApiSlice";
 import FeedHeader from "./components/header";
-
-const quickFilterOptions = [
-  {
-    id: "all",
-    label: "All Pets",
-    description: "See the full rescue feed.",
-  },
-  {
-    id: "nearby",
-    label: "Nearby",
-    description: "Prioritize pets close to you.",
-  },
-  {
-    id: "latest",
-    label: "Latest Uploaded",
-    description: "Show the newest rescue listings first.",
-  },
-  {
-    id: "available",
-    label: "Available Only",
-    description: "Hide pets already in adoption review.",
-  },
-];
+import PetCard from "../pets/pet-card";
 
 const FeedPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [quickFilter, setQuickFilter] = React.useState("all");
   const [petType, setPetType] = React.useState("all");
   const [area, setArea] = React.useState("all");
+  const [size, setSize] = React.useState("all");
+  const [location, setLocation] = React.useState("anywhere");
+  const [color, setColor] = React.useState("all");
 
   const { data, isError, isLoading } = usePetListQuery();
   const pets = React.useMemo(() => normalizePetListResponse(data), [data]);
 
   const filteredPets = filterPets(pets, {
     searchTerm,
-    quickFilter,
+    quickFilter: "all",
     petType,
     breed: "all",
     area,
+    size,
+    location,
+    color,
   });
+
+  const feedFilters = {
+    petType,
+    size,
+    location,
+    color,
+  };
+
+  const handleFilterChange = (filterId, value) => {
+    const setters = {
+      petType: setPetType,
+      size: setSize,
+      location: setLocation,
+      color: setColor,
+    };
+
+    setters[filterId]?.(value);
+  };
+
+  const resetFeedFilters = () => {
+    setSearchTerm("");
+    setPetType("all");
+    setArea("all");
+    setSize("all");
+    setLocation("anywhere");
+    setColor("all");
+  };
 
   return (
     <div className="py-6">
       <FeedHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        options={quickFilterOptions}
-        activeFilter={quickFilter}
-        onChange={setQuickFilter}
+        filters={feedFilters}
+        onFilterChange={handleFilterChange}
+        onResetFilters={resetFeedFilters}
       />
       <div className="flex gap-4 mt-5">
         <LeftSideBar className="max-w-sm w-full" />
@@ -82,12 +91,7 @@ const FeedPage = () => {
               ))
             ) : (
               <EmptyFeedState
-                onReset={() => {
-                  setSearchTerm("");
-                  setQuickFilter("all");
-                  setPetType("all");
-                  setArea("all");
-                }}
+                onReset={resetFeedFilters}
               />
             )}
           </section>

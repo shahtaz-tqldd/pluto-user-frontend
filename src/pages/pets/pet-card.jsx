@@ -87,13 +87,20 @@ const PetCard = ({ pet, onOpenDetails }) => {
 
       <div className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-primary/8 px-3 py-1 font-medium text-primary">
-              {pet.interestedCount} interested
-            </span>
-            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">
-              {pet.activeChats} are talking
-            </span>
+          <div className="text-xs flex items-center gap-3">
+            <button className="flex items-center gap-2 border border-primary/40 py-2 px-2 rounded-full text-primary">
+              <Heart size={14} />
+              <span className="hidden">Interest</span>
+            </button>
+
+            <div className="flex flex-col">
+              <span className="text-slate-600 font-medium">
+                {pet.interestedCount} interested
+              </span>
+              <span className="text-slate-400">
+                {pet.activeChats} are talking for adoption
+              </span>
+            </div>
           </div>
 
           <button
