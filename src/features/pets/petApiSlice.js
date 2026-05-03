@@ -27,7 +27,9 @@ export const petApiSlice = apiSlice.injectEndpoints({
         url: `pets/${petId}/`,
         method: "GET",
       }),
-      providesTags: ["petDetails"],
+      providesTags: (_result, _error, petId) => [
+        { type: "petDetails", id: petId },
+      ],
     }),
 
     rescuerPetList: builder.query({
@@ -37,6 +39,53 @@ export const petApiSlice = apiSlice.injectEndpoints({
       }),
       providesTags: ["rescuerPets"],
     }),
+
+    userRequestStatus: builder.query({
+      query: (petId) => ({
+        url: `/pets/user-request-status/${petId}/`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, petId) => [
+        { type: "adoptionRequestStatus", id: petId },
+      ],
+    }),
+
+    userRequestList: builder.query({
+      query: (petId) => ({
+        url: `/pets/user-request-list/${petId}/`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, petId) => [
+        { type: "adoptionRequests", id: petId },
+      ],
+    }),
+
+    createPetRequest: builder.mutation({
+      query: ({ petId, payload }) => ({
+        url: `/pets/create-request/${petId}/`,
+        method: "POST",
+        body: payload,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: (_result, _error, { petId }) => [
+        { type: "adoptionRequestStatus", id: petId },
+        { type: "petDetails", id: petId },
+      ],
+    }),
+
+    updatePetRequest: builder.mutation({
+      query: ({ requestId, payload }) => ({
+        url: `/pets/update-request/${requestId}/`,
+        method: "PATCH",
+        body: payload,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: (_result, _error, { petId }) => [
+        { type: "adoptionRequests", id: petId },
+        { type: "adoptionRequestStatus", id: petId },
+        { type: "petDetails", id: petId },
+      ],
+    }),
   }),
 });
 
@@ -45,4 +94,8 @@ export const {
   usePetListQuery,
   useRescuerPetListQuery,
   usePetDetailsQuery,
+  useUserRequestStatusQuery,
+  useUserRequestListQuery,
+  useCreatePetRequestMutation,
+  useUpdatePetRequestMutation,
 } = petApiSlice;

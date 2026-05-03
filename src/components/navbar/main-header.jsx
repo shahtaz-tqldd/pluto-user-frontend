@@ -10,12 +10,12 @@ import {
   LogOut,
   MapPin,
   MessageCircle,
+  PawPrint,
   Search,
   Settings,
   ShieldAlert,
   UserRound,
 } from "lucide-react";
-import logo from "@/assets/images/logo.svg";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -273,6 +273,9 @@ const ProfileMenu = ({
       <DropdownMenuSeparator />
       <ProfileMenuItem to={profilePath} icon={<UserRound />}>
         My profile
+      </ProfileMenuItem>
+      <ProfileMenuItem to="/feeds" icon={<PawPrint />}>
+        Adopt pets
       </ProfileMenuItem>
       <ProfileMenuItem to="/" icon={<MessageCircle />}>
         Messages

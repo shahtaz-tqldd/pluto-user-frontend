@@ -7,6 +7,7 @@ import {
   HeartHandshake,
   House,
   MessageSquare,
+  PawPrint,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -42,6 +43,12 @@ const SideMenu = () => {
       label: "Messages",
       link: "/",
       icon: <MessageSquare size={18} />,
+    },
+    {
+      id: 4,
+      label: "Adopt a pet",
+      link: "/feed",
+      icon: <PawPrint size={18} />,
     },
     {
       id: 5,

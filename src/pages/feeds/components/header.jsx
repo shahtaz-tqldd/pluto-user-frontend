@@ -6,6 +6,7 @@ import {
   ChevronDown,
   LogOut,
   MessageCircle,
+  PawPrint,
   Search,
   Settings,
   SlidersHorizontal,
@@ -133,7 +134,8 @@ const FeedHeader = ({
                 type="button"
                 className={cn(
                   "relative inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/15 bg-white text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
-                  activeFilterCount > 0 && "border-primary bg-primary text-white",
+                  activeFilterCount > 0 &&
+                    "border-primary bg-primary text-white",
                 )}
                 aria-label="Open feed filters"
               >
@@ -248,6 +250,9 @@ const FeedHeader = ({
               <DropdownMenuSeparator />
               <ProfileMenuItem to={profilePath} icon={<UserRound />}>
                 My profile
+              </ProfileMenuItem>
+              <ProfileMenuItem to="/feed" icon={<PawPrint />}>
+                Adopt Pets
               </ProfileMenuItem>
               <ProfileMenuItem to="/" icon={<MessageCircle />}>
                 Messages

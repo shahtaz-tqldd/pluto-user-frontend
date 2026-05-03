@@ -8,7 +8,8 @@ import ResetPasswordPage from "../pages/auth/reset-password";
 import PrivateRoute from "./private-route";
 import FeedPage from "@/pages/feeds";
 import ProfilePage from "@/pages/profile";
-import PetThreadPage from "@/pages/pets/threads/pet-thread-page";
+import PetThreadPage from "@/pages/pets/threads";
+import CommunityPage from "@/pages/community";
 
 export const routes = createBrowserRouter([
   {
@@ -21,6 +22,10 @@ export const routes = createBrowserRouter([
     children: [
       {
         path: "/",
+        element: <CommunityPage />,
+      },
+      {
+        path: "/feeds",
         element: <FeedPage />,
       },
       {

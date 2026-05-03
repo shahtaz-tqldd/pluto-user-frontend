@@ -17,3 +17,12 @@ export const getInitials = (name) =>
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+export const titleCase = (value) =>
+  value
+    ? value
+        .toString()
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "";

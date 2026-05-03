@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  ArrowUpRight,
   ChevronDown,
   Clock3,
   Dot,
@@ -66,9 +67,7 @@ const PetCard = ({
         />
 
         <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
-          <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur">
-            {pet.petType}
-          </span>
+          <div></div>
           <span
             className={`rounded-full px-3 py-1 text-xs font-semibold backdrop-blur ${
               pet.available
@@ -76,16 +75,33 @@ const PetCard = ({
                 : "bg-[#fff2dc] text-[#996515]"
             }`}
           >
-            {pet.status}
+            {pet.activeChats} are talking
           </span>
         </div>
 
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#041612]/95 via-[#041612]/78 to-transparent px-5 pb-5 pt-12 text-white sm:px-6">
-          <div className="flex items-start gap-3">
+          <div className="flex items-end gap-3">
             <div className="min-w-0 flex-1">
-              <h2 className="mt-3 text-2xl font-bold text-white">{pet.name}</h2>
+              <div className="flex gap-2.5 items-end">
+                <h2 className="mt-3 text-2xl font-bold text-white">
+                  {pet.name}
+                </h2>
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur mb-1.5">
+                  {pet.petType}
+                </span>
+              </div>
               <p className="mt-1 text-sm text-white/80">{pet.label}</p>
             </div>
+
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-full px-4"
+              onClick={handleOpenDetails}
+            >
+              <ArrowUpRight className="size-4" />
+              Open Thread
+            </Button>
           </div>
         </div>
       </div>
@@ -119,9 +135,6 @@ const PetCard = ({
             <div className="flex flex-col">
               <span className="text-slate-600 font-medium">
                 {pet.interestedCount} interested
-              </span>
-              <span className="text-slate-400">
-                {pet.activeChats} are talking for adoption
               </span>
             </div>
           </div>
@@ -174,31 +187,6 @@ const PetCard = ({
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 {pet.rescueNote}
               </p>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-sm text-slate-500">
-              <div className="flex items-center gap-4">
-                <span>{getDaysSinceUpload(pet.uploadedAt)}</span>
-                <span className="inline-flex items-center gap-1">
-                  <Heart
-                    className={cn(
-                      "size-4 text-primary/65",
-                      isShortlisted && "fill-current text-[#8a5b00]",
-                    )}
-                  />
-                  {isShortlisted ? "Shortlisted" : "Shortlist"}
-                </span>
-              </div>
-
-              <Button
-                type="button"
-                size="sm"
-                className="rounded-full px-4"
-                onClick={handleOpenDetails}
-              >
-                <MessageCircleMore className="size-4" />
-                Open details
-              </Button>
             </div>
           </div>
         ) : null}
