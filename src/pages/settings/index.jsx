@@ -26,6 +26,7 @@ import {
   Moon,
   PawPrint,
   Phone,
+  Plus,
   Save,
   Shield,
   ShieldCheck,
@@ -235,20 +236,21 @@ const ProfileInformationSection = ({
     {
       id: "identity",
       label: "Identity",
+      description: "Name and contact",
       icon: User,
-      gradient: "linear-gradient(135deg, #0f766e, #22c55e)",
     },
     {
       id: "security",
       label: "Security",
+      description: "Password and protection",
       icon: Shield,
-      gradient: "linear-gradient(135deg, #2563eb, #06b6d4)",
     },
     {
       id: "account",
       label: "Account",
+      description: "Pause or delete",
       icon: Trash2,
-      gradient: "linear-gradient(135deg, #dc2626, #fb7185)",
+      tone: "danger",
     },
   ];
 
@@ -279,6 +281,31 @@ const ProfileInformationSection = ({
   const selectedTheme =
     themeOptions.find((option) => option.id === themePreference) ??
     themeOptions[2];
+  const activeProfilePanelMeta =
+    profilePanels.find((panel) => panel.id === activeProfilePanel) ??
+    profilePanels[0];
+  const recognitionStats = [
+    {
+      label: "Pets helped",
+      value: fallbackValue(user?.stats?.pets_helped, "18"),
+      icon: PawPrint,
+    },
+    {
+      label: "Adoptions",
+      value: fallbackValue(user?.stats?.adoptions, "7"),
+      icon: HeartHandshake,
+    },
+    {
+      label: "Thanks",
+      value: fallbackValue(user?.stats?.thanks, "42"),
+      icon: MessageCircle,
+    },
+    {
+      label: "Trust score",
+      value: fallbackValue(user?.stats?.trust_score, "91%"),
+      icon: BadgeCheck,
+    },
+  ];
 
   return (
     <SectionCard
@@ -298,77 +325,32 @@ const ProfileInformationSection = ({
         />
       }
     >
-      <div className="overflow-hidden rounded-[28px] border border-primary/10 bg-[#f8fcf9] dark:border-white/10 dark:bg-white/5">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="relative min-h-[260px] bg-[linear-gradient(135deg,#004f3b,#0f766e,#d9f99d)] p-6 text-white">
-            <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(0,0,0,0.22),transparent_58%)]" />
-            <div className="relative flex h-full flex-col justify-between gap-8">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
-                  Pawpal profile
-                </span>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold capitalize text-primary">
-                  {role}
-                </span>
-              </div>
+      <ProfileSummaryCard
+        activePanelId={activeProfilePanel}
+        email={profileData.email}
+        fullName={fullName}
+        onProfilePictureChange={handleProfilePictureChange}
+        onPanelChange={setActiveProfilePanel}
+        panels={profilePanels}
+        phone={profileData.phone}
+        profilePreviewUrl={profilePreviewUrl}
+        role={role}
+        stats={recognitionStats}
+      />
 
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-                <label
-                  htmlFor="profile-picture-upload"
-                  className="group relative block size-36 shrink-0 cursor-pointer overflow-hidden rounded-[34px] border-4 border-white/35 bg-white/20 shadow-2xl"
-                >
-                  <input
-                    id="profile-picture-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(event) => {
-                      handleProfilePictureChange(event.target.files?.[0]);
-                      event.target.value = "";
-                    }}
-                  />
-                  {profilePreviewUrl ? (
-                    <img
-                      src={profilePreviewUrl}
-                      alt="Profile"
-                      className="size-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-4xl font-semibold">
-                      {getInitials(fullName)}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-950/35 opacity-0 transition group-hover:opacity-100">
-                    <Camera className="size-6 text-white" />
-                  </div>
-                </label>
-
-                <div className="min-w-0 flex-1 sm:text-right">
-                  <h3 className="truncate text-2xl font-semibold">
-                    {fullName}
-                  </h3>
-                  <p className="mt-2 text-sm text-white/80">
-                    {profileData.email || "Add an email to secure your account"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid content-stretch gap-3 bg-white p-4 dark:bg-slate-950 sm:grid-cols-2 lg:grid-cols-1">
-            {profilePanels.map((panel) => (
-              <ProfilePanelButton
-                key={panel.id}
-                panel={panel}
-                isActive={activeProfilePanel === panel.id}
-                onClick={() => setActiveProfilePanel(panel.id)}
-              />
-            ))}
+      <div className="mt-5 rounded-[28px] border border-slate-100 bg-[#fcfdfc] p-4 dark:border-white/10 dark:bg-white/5 sm:p-5">
+        <div className="mb-5 flex items-center gap-3">
+          <ProfileDropdownIcon panel={activeProfilePanelMeta} />
+          <div>
+            <h3 className="text-base font-semibold text-slate-950 dark:text-white">
+              {activeProfilePanelMeta.label}
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-white/60">
+              {activeProfilePanelMeta.description}
+            </p>
           </div>
         </div>
-      </div>
 
-      <div className="mt-5 rounded-[28px] border border-slate-100 bg-white p-4 dark:border-white/10 dark:bg-slate-950 sm:p-5">
         {activeProfilePanel === "identity" && (
           <div className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
@@ -408,26 +390,11 @@ const ProfileInformationSection = ({
               />
             </div>
 
-            <div className="grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
-              <ProfileSignal
-                icon={Mail}
-                label="Email"
-                value="Private by default"
-              />
-              <ProfileSignal
-                icon={Phone}
-                label="Phone"
-                value="Only when shared"
-              />
-              <ProfileSignal
-                icon={MapPin}
-                label="Location"
-                value="Area-level only"
-              />
+            <div className="flex justify-end">
               <Button
                 onClick={handleSaveProfile}
                 disabled={!hasProfileChanges || isUpdatingProfile}
-                className="h-full min-h-16 rounded-2xl px-5"
+                className="rounded-full px-5"
               >
                 <Save className="size-4" />
                 {isUpdatingProfile ? "Saving..." : "Save"}
@@ -1111,7 +1078,7 @@ const SettingsNavigation = ({ activeSection, onSectionChange }) => {
                 aria-current={isActive ? "page" : undefined}
                 onClick={() => onSectionChange(section.id)}
                 className={cn(
-                  "group flex min-w-[190px] items-start gap-3 rounded-2xl px-3 py-3 text-left transition xl:min-w-0 xl:w-full",
+                  "group flex min-w-[190px] items-center gap-3 rounded-2xl px-3 py-3 text-left transition xl:min-w-0 xl:w-full",
                   isActive
                     ? "bg-primary text-white shadow-sm dark:bg-white dark:text-slate-950"
                     : "text-slate-900 hover:bg-[#f7fbf8] dark:text-white dark:hover:bg-white/10",
@@ -1121,7 +1088,7 @@ const SettingsNavigation = ({ activeSection, onSectionChange }) => {
                   icon={section.icon}
                   gradient={section.gradient}
                   className={cn(
-                    "mt-0.5 size-9",
+                    "size-9",
                     isActive && "ring-1 ring-white/25",
                   )}
                   iconClassName="size-4"
@@ -1232,62 +1199,291 @@ const Switch = ({ checked, onCheckedChange }) => {
       className={cn(
         "relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
         checked
-          ? "bg-emerald-500/25 dark:bg-emerald-400/20"
-          : "bg-fuchsia-500/20 dark:bg-fuchsia-400/20",
+          ? "bg-emerald-500 dark:bg-emerald-500"
+          : "bg-rose-100 dark:bg-rose-500/25",
       )}
     >
       <span
         className={cn(
           "inline-block size-4 rounded-full transition-all",
           checked
-            ? "translate-x-6 bg-[linear-gradient(135deg,#f97316,#facc15)] shadow-[0_3px_10px_rgba(249,115,22,0.38)]"
-            : "translate-x-1 bg-[linear-gradient(135deg,#7c3aed,#ec4899)] shadow-[0_3px_10px_rgba(124,58,237,0.34)]",
+            ? "translate-x-6 bg-lime-300 shadow-[0_3px_10px_rgba(132,204,22,0.42)]"
+            : "translate-x-1 bg-rose-500 shadow-[0_3px_10px_rgba(244,63,94,0.32)]",
         )}
       />
     </button>
   );
 };
 
-const ProfilePanelButton = ({ panel, isActive, onClick }) => {
+const ProfileDropdownIcon = ({ panel }) => {
+  const isDanger = panel.tone === "danger";
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <span
       className={cn(
-        "group flex min-h-24 items-center gap-3 rounded-[24px] border p-4 text-left transition",
-        isActive
-          ? "border-transparent text-white shadow-sm"
-          : "border-slate-100 bg-white hover:border-primary/20 hover:bg-[#fbfdfb] dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10",
+        "flex size-9 shrink-0 items-center justify-center rounded-xl",
+        isDanger
+          ? "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300"
+          : "bg-primary/10 text-primary dark:bg-primary/15 dark:text-emerald-300",
       )}
-      style={isActive ? { background: panel.gradient } : undefined}
     >
-      <IconBubble
-        icon={panel.icon}
-        gradient={panel.gradient}
-        className={cn(
-          "size-12 rounded-[18px]",
-          isActive && "ring-1 ring-white/30",
-        )}
-      />
-      <div>
-        <p
-          className={cn(
-            "text-sm font-semibold",
-            isActive ? "text-white" : "text-slate-950 dark:text-white",
-          )}
-        >
-          {panel.label}
-        </p>
-        <p
-          className={cn(
-            "mt-1 text-xs font-semibold",
-            isActive ? "text-white/80" : "text-primary dark:text-white/60",
-          )}
-        >
-          {isActive ? "Open" : "Select"}
-        </p>
+      {React.createElement(panel.icon, { className: "size-4" })}
+    </span>
+  );
+};
+
+const ProfileSummaryCard = ({
+  activePanelId,
+  email,
+  fullName,
+  onProfilePictureChange,
+  onPanelChange,
+  panels,
+  phone,
+  profilePreviewUrl,
+  role,
+  stats,
+}) => {
+  const focusAreas = [
+    {
+      label: role === "rescuer" ? "Rescue response" : "Adoption matches",
+      value: "76%",
+      icon: HeartHandshake,
+    },
+    {
+      label: "Safety follow-ups",
+      value: "64%",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Pet updates",
+      value: "52%",
+      icon: PawPrint,
+    },
+    {
+      label: "Community replies",
+      value: "38%",
+      icon: MessageCircle,
+    },
+  ];
+
+  return (
+    <div className="overflow-hidden rounded-[30px] border border-slate-100 bg-white dark:border-white/10 dark:bg-slate-950">
+      <div className="grid lg:grid-cols-[290px_minmax(0,1fr)]">
+        <aside className="border-b border-slate-100 bg-[#fbfdfb] p-6 dark:border-white/10 dark:bg-white/5 lg:border-b-0 lg:border-r">
+          <div className="flex flex-col items-center text-center">
+            <label
+              htmlFor="profile-picture-upload"
+              className="group relative block size-36 cursor-pointer overflow-visible rounded-full"
+            >
+              <input
+                id="profile-picture-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  onProfilePictureChange(event.target.files?.[0]);
+                  event.target.value = "";
+                }}
+              />
+              <span className="block size-full overflow-hidden rounded-full border-[10px] border-amber-300 bg-primary/10 shadow-[0_18px_45px_rgba(15,118,110,0.16)] dark:border-amber-400/80">
+                {profilePreviewUrl ? (
+                  <img
+                    src={profilePreviewUrl}
+                    alt="Profile"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <span className="flex size-full items-center justify-center text-4xl font-semibold text-primary">
+                    {getInitials(fullName)}
+                  </span>
+                )}
+              </span>
+              <span className="absolute -right-1 bottom-2 flex size-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fb7185,#f97316)] text-white shadow-[0_12px_26px_rgba(244,63,94,0.35)] transition group-hover:scale-105">
+                <Plus className="size-6" />
+              </span>
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-950/35 opacity-0 transition group-hover:opacity-100">
+                <Camera className="size-6 text-white" />
+              </div>
+            </label>
+
+            <h3 className="mt-6 max-w-full truncate text-2xl font-semibold text-slate-950 dark:text-white">
+              {fullName}
+            </h3>
+            <span className="mt-2 inline-flex rounded-full border border-primary/10 bg-white px-3 py-1 text-xs font-semibold capitalize text-primary dark:border-white/10 dark:bg-white/10 dark:text-emerald-200">
+              {role} profile
+            </span>
+
+            <div className="mt-7 w-full space-y-2 text-left">
+              <ProfileContactLine
+                icon={Mail}
+                label={email || "Email not added"}
+              />
+              <ProfileContactLine
+                icon={Phone}
+                label={phone || "Phone not added"}
+              />
+              <ProfileContactLine icon={MapPin} label="Area-level location" />
+            </div>
+          </div>
+        </aside>
+
+        <div className="relative p-5 sm:p-6">
+          <div className="absolute inset-x-0 top-0 h-32 bg-[linear-gradient(135deg,rgba(240,253,244,0.95),rgba(240,249,255,0.95))] dark:bg-[linear-gradient(135deg,rgba(6,78,59,0.24),rgba(15,23,42,0.92))]" />
+
+          <div className="relative">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                  Social recognition
+                </p>
+                <h3 className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
+                  Community impact
+                </h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-white/60">
+                  Numbers people can quickly recognize on your public profile.
+                </p>
+              </div>
+              <span className="w-fit rounded-full border border-primary/10 bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm dark:border-white/10 dark:bg-slate-950 dark:text-emerald-200">
+                Last 30 days
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {stats.map((stat) => (
+                <ProfileStat key={stat.label} stat={stat} />
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-[26px] border border-slate-100 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-950">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-950 dark:text-white">
+                    Where this profile shines
+                  </h4>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-white/60">
+                    A compact public-facing activity mix.
+                  </p>
+                </div>
+                <BadgeCheck className="size-5 text-primary" />
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {focusAreas.map((area) => (
+                  <ProfileFocusBar key={area.label} area={area} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </button>
+
+      <ProfilePanelTabs
+        activePanelId={activePanelId}
+        onPanelChange={onPanelChange}
+        panels={panels}
+      />
+    </div>
+  );
+};
+
+const ProfilePanelTabs = ({ activePanelId, onPanelChange, panels }) => {
+  return (
+    <div className="border-t border-slate-100 bg-[#fbfdfb] p-3 dark:border-white/10 dark:bg-white/5">
+      <div
+        role="tablist"
+        aria-label="Profile settings sections"
+        className="grid gap-2 sm:grid-cols-3"
+      >
+        {panels.map((panel) => {
+          const isActive = panel.id === activePanelId;
+
+          return (
+            <button
+              key={panel.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => onPanelChange(panel.id)}
+              className={cn(
+                "flex min-h-16 items-center gap-3 rounded-[22px] border px-3 py-3 text-left transition",
+                isActive
+                  ? "border-primary/25 bg-white shadow-sm dark:border-primary/30 dark:bg-slate-950"
+                  : "border-transparent hover:border-primary/10 hover:bg-white/70 dark:hover:border-white/10 dark:hover:bg-slate-950/70",
+              )}
+            >
+              <ProfileDropdownIcon panel={panel} />
+              <span className="min-w-0">
+                <span
+                  className={cn(
+                    "block text-sm font-semibold",
+                    isActive
+                      ? "text-primary dark:text-emerald-300"
+                      : "text-slate-950 dark:text-white",
+                  )}
+                >
+                  {panel.label}
+                </span>
+                <span className="block truncate text-xs text-slate-500 dark:text-white/60">
+                  {panel.description}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const ProfileContactLine = ({ icon, label }) => {
+  return (
+    <div className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white px-3 py-2 text-sm text-slate-600 dark:border-white/10 dark:bg-slate-950 dark:text-white/60">
+      {React.createElement(icon, { className: "size-4 shrink-0 text-primary" })}
+      <span className="min-w-0 truncate">{label}</span>
+    </div>
+  );
+};
+
+const ProfileStat = ({ stat }) => {
+  return (
+    <div className="rounded-[22px] border border-slate-100 bg-white p-4 shadow-[0_16px_34px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-950">
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex size-9 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-emerald-300">
+          {React.createElement(stat.icon, { className: "size-4" })}
+        </span>
+        <span className="text-2xl font-semibold text-slate-950 dark:text-white">
+          {stat.value}
+        </span>
+      </div>
+      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-white/50">
+        {stat.label}
+      </p>
+    </div>
+  );
+};
+
+const ProfileFocusBar = ({ area }) => {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+        <span className="flex min-w-0 items-center gap-2 font-medium text-slate-700 dark:text-white/75">
+          {React.createElement(area.icon, {
+            className: "size-4 shrink-0 text-primary",
+          })}
+          <span className="truncate">{area.label}</span>
+        </span>
+        <span className="shrink-0 font-semibold text-slate-950 dark:text-white">
+          {area.value}
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: area.value }}
+        />
+      </div>
+    </div>
   );
 };
 
@@ -1300,7 +1496,7 @@ const ProfileAppearanceDropdown = ({
   themePreference,
 }) => {
   return (
-    <div className="relative w-full min-w-[230px] sm:w-[250px] lg:text-right">
+    <div className="relative w-full min-w-[220px] sm:w-[230px] lg:text-right">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
         Appearance
       </p>
@@ -1312,12 +1508,9 @@ const ProfileAppearanceDropdown = ({
         className="mt-2 flex w-full items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-[#f7fbf8] px-3 py-2.5 text-left shadow-sm transition hover:border-primary/25 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
       >
         <span className="flex min-w-0 items-center gap-3">
-          <IconBubble
-            icon={selectedTheme.icon}
-            gradient={selectedTheme.gradient}
-            className="size-9 rounded-xl"
-            iconClassName="size-4"
-          />
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-emerald-300">
+            {React.createElement(selectedTheme.icon, { className: "size-4" })}
+          </span>
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-slate-950 dark:text-white">
               {selectedTheme.label}
@@ -1360,12 +1553,9 @@ const ProfileAppearanceDropdown = ({
                     : "hover:bg-[#f7fbf8] dark:hover:bg-white/5",
                 )}
               >
-                <IconBubble
-                  icon={option.icon}
-                  gradient={option.gradient}
-                  className="size-8 rounded-xl"
-                  iconClassName="size-4"
-                />
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-emerald-300">
+                  {React.createElement(option.icon, { className: "size-4" })}
+                </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-slate-950 dark:text-white">
                     {option.label}
@@ -1379,27 +1569,6 @@ const ProfileAppearanceDropdown = ({
           })}
         </div>
       )}
-    </div>
-  );
-};
-
-const ProfileSignal = ({ icon, label, value }) => {
-  return (
-    <div className="rounded-2xl border border-slate-100 bg-[#fbfdfb] p-4 dark:border-white/10 dark:bg-white/5">
-      <div className="flex items-center gap-2">
-        <IconBubble
-          icon={icon}
-          gradient="linear-gradient(135deg, #0f766e, #22c55e)"
-          className="size-7 rounded-xl"
-          iconClassName="size-3.5"
-        />
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 dark:text-white/70">
-          {label}
-        </span>
-      </div>
-      <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">
-        {value}
-      </p>
     </div>
   );
 };

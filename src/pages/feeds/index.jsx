@@ -1,70 +1,124 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   buildPetThreadPath,
   filterPets,
   normalizePetListResponse,
 } from "./utils/feed-utils";
-import PetCard from "./components/pet-card";
+import {
+  buildFeedFilterSearch,
+  defaultFeedFilters,
+  getFeedFiltersFromSearch,
+} from "./utils/feed-filter-state";
 import EmptyFeedState from "./components/empty-feed-state";
 import RightSidebar from "./components/right-sidebar";
 import LeftSideBar from "./components/left-sidebar";
 
 import { usePetListQuery } from "@/features/pets/petApiSlice";
-import FeedHeader from "./components/header";
+import PetCard from "../pets/pet-card";
 
-const quickFilterOptions = [
-  {
-    id: "all",
-    label: "All Pets",
-    description: "See the full rescue feed.",
-  },
-  {
-    id: "nearby",
-    label: "Nearby",
-    description: "Prioritize pets close to you.",
-  },
-  {
-    id: "latest",
-    label: "Latest Uploaded",
-    description: "Show the newest rescue listings first.",
-  },
-  {
-    id: "available",
-    label: "Available Only",
-    description: "Hide pets already in adoption review.",
-  },
-];
+const SHORTLIST_STORAGE_KEY = "pawpal-shortlisted-strays";
+
+const getStoredShortlistIds = () => {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const parsedIds = JSON.parse(
+      window.localStorage.getItem(SHORTLIST_STORAGE_KEY) || "[]",
+    );
+
+    return Array.isArray(parsedIds) ? parsedIds.map(String) : [];
+  } catch {
+    return [];
+  }
+};
 
 const FeedPage = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [quickFilter, setQuickFilter] = React.useState("all");
-  const [petType, setPetType] = React.useState("all");
-  const [area, setArea] = React.useState("all");
+  const location = useLocation();
+  const [shortlistIds, setShortlistIds] = React.useState(getStoredShortlistIds);
+  const filters = React.useMemo(
+    () => getFeedFiltersFromSearch(location.search),
+    [location.search],
+  );
 
   const { data, isError, isLoading } = usePetListQuery();
   const pets = React.useMemo(() => normalizePetListResponse(data), [data]);
 
   const filteredPets = filterPets(pets, {
-    searchTerm,
-    quickFilter,
-    petType,
+    searchTerm: filters.searchTerm,
+    quickFilter: "all",
+    petType: filters.petType,
     breed: "all",
-    area,
+    area: filters.area,
+    size: filters.size,
+    location: filters.location,
+    radiusKm: filters.radiusKm,
+    color: filters.color,
   });
 
+  const shortlistedPets = React.useMemo(() => {
+    const shortlist = new Set(shortlistIds);
+    return pets.filter((pet) => shortlist.has(String(pet.id)));
+  }, [pets, shortlistIds]);
+
+  const navigateToFilteredFeed = React.useCallback(
+    (nextFilters) => {
+      const search = buildFeedFilterSearch(nextFilters);
+
+      navigate(
+        {
+          pathname: "/",
+          search: search ? `?${search}` : "",
+        },
+        { replace: true },
+      );
+    },
+    [navigate],
+  );
+
+  const handleFilterChange = (filterId, value) => {
+    navigateToFilteredFeed({
+      ...filters,
+      [filterId]: value,
+    });
+  };
+
+  const toggleShortlist = (petId) => {
+    setShortlistIds((currentIds) => {
+      const petIdString = String(petId);
+      const nextIds = currentIds.includes(petIdString)
+        ? currentIds.filter((id) => id !== petIdString)
+        : [petIdString, ...currentIds];
+
+      window.localStorage.setItem(
+        SHORTLIST_STORAGE_KEY,
+        JSON.stringify(nextIds),
+      );
+
+      return nextIds;
+    });
+  };
+
+  const resetFeedFilters = () => {
+    navigateToFilteredFeed(defaultFeedFilters);
+  };
+
   return (
-    <div className="py-6">
-      <FeedHeader
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        options={quickFilterOptions}
-        activeFilter={quickFilter}
-        onChange={setQuickFilter}
-      />
-      <div className="flex gap-4 mt-5">
-        <LeftSideBar className="max-w-sm w-full" />
+    <div className="py-4">
+      <div className="flex flex-col gap-4 xl:flex-row">
+        <LeftSideBar
+          className="w-full xl:w-[23rem] xl:max-w-sm"
+          filters={filters}
+          pets={pets}
+          shortlistedPets={shortlistedPets}
+          resultCount={filteredPets.length}
+          onFilterChange={handleFilterChange}
+          onResetFilters={resetFeedFilters}
+          onOpenPet={(pet) => navigate(buildPetThreadPath(pet))}
+        />
 
         <div className="min-w-0 flex-1 space-y-5 pb-8">
           <section className="space-y-5">
@@ -77,25 +131,20 @@ const FeedPage = () => {
                 <PetCard
                   key={pet.id}
                   pet={pet}
+                  isShortlisted={shortlistIds.includes(String(pet.id))}
+                  onToggleShortlist={() => toggleShortlist(pet.id)}
                   onOpenDetails={() => navigate(buildPetThreadPath(pet))}
                 />
               ))
             ) : (
-              <EmptyFeedState
-                onReset={() => {
-                  setSearchTerm("");
-                  setQuickFilter("all");
-                  setPetType("all");
-                  setArea("all");
-                }}
-              />
+              <EmptyFeedState onReset={resetFeedFilters} />
             )}
           </section>
         </div>
 
         <RightSidebar
           pets={filteredPets.length > 0 ? filteredPets : pets}
-          className="max-w-sm w-full"
+          className="w-full xl:w-[23rem] xl:max-w-sm"
         />
       </div>
     </div>

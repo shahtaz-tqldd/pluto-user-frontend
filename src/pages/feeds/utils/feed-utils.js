@@ -10,6 +10,26 @@ const titleCase = (value) =>
 const uniqueValues = (items) =>
   [...new Set(items.filter(Boolean))].sort((a, b) => a.localeCompare(b));
 
+const toNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const getFallbackDistance = (petId) => {
+  const numberId = toNumber(petId);
+
+  if (numberId !== null) {
+    return (numberId % 12) + 1;
+  }
+
+  const hash = petId
+    ?.toString()
+    .split("")
+    .reduce((total, character) => total + character.charCodeAt(0), 0);
+
+  return ((hash || 4) % 12) + 1;
+};
+
 export const slugify = (value) =>
   value
     ?.toString()
@@ -38,8 +58,19 @@ export const buildAreaOptions = (pets) =>
   uniqueValues(pets.map((pet) => pet.area));
 
 export const filterPets = (pets, filters) => {
-  const { searchTerm, quickFilter, petType, breed, area } = filters;
+  const {
+    searchTerm = "",
+    quickFilter,
+    petType,
+    breed,
+    area,
+    size = "all",
+    location = "anywhere",
+    radiusKm = "5",
+    color = "all",
+  } = filters;
   const normalizedSearch = searchTerm.trim().toLowerCase();
+  const selectedRadius = toNumber(radiusKm) ?? 5;
 
   let filteredPets = pets.filter((pet) => {
     const matchesSearch =
@@ -53,11 +84,26 @@ export const filterPets = (pets, filters) => {
         pet.area,
       ].some((value) => value?.toLowerCase().includes(normalizedSearch));
 
+    const distanceKm = toNumber(pet.distanceKm);
     const matchesType = petType === "all" || pet.petType === petType;
     const matchesBreed = breed === "all" || pet.breed === breed;
     const matchesArea = area === "all" || pet.area === area;
+    const matchesSize = size === "all" || pet.size === size;
+    const matchesColor =
+      color === "all" || pet.color?.toLowerCase() === color.toLowerCase();
+    const matchesRadius =
+      location !== "nearby" ||
+      (distanceKm !== null ? distanceKm <= selectedRadius : pet.isNearby);
 
-    return matchesSearch && matchesType && matchesBreed && matchesArea;
+    return (
+      matchesSearch &&
+      matchesType &&
+      matchesBreed &&
+      matchesArea &&
+      matchesSize &&
+      matchesColor &&
+      matchesRadius
+    );
   });
 
   if (quickFilter === "nearby") {
@@ -122,6 +168,9 @@ export const normalizePetListResponse = (response) => {
     const gender = titleCase(pet.gender);
     const size = titleCase(pet.size);
     const location = pet.current_location || "Location not set";
+    const distanceKm =
+      toNumber(pet.distance_km ?? pet.distanceKm ?? pet.distance) ??
+      getFallbackDistance(pet.id);
 
     return {
       id: pet.id,
@@ -139,7 +188,8 @@ export const normalizePetListResponse = (response) => {
       available: pet.status === "AVAILABLE",
       interestedCount: pet.interested_count ?? 0,
       activeChats: pet.active_chats ?? 0,
-      isNearby: true,
+      distanceKm,
+      isNearby: distanceKm <= 5,
       uploadedAt: pet.created_at,
       rescuerName: pet.rescuer_name || "Community rescuer",
       rescueNote: pet.medical_notes || pet.story || "No extra notes yet.",

@@ -18,7 +18,12 @@ import {
 } from "../feeds/utils/feed-utils";
 import PetImageCarousel from "../feeds/components/pet-image-carousel";
 
-const PetCard = ({ pet, onOpenDetails }) => {
+const PetCard = ({
+  pet,
+  isShortlisted = false,
+  onToggleShortlist,
+  onOpenDetails,
+}) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = React.useState(false);
   const handleOpenDetails = () => {
@@ -87,13 +92,38 @@ const PetCard = ({ pet, onOpenDetails }) => {
 
       <div className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full bg-primary/8 px-3 py-1 font-medium text-primary">
-              {pet.interestedCount} interested
-            </span>
-            <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">
-              {pet.activeChats} are talking
-            </span>
+          <div className="text-xs flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onToggleShortlist}
+              aria-pressed={isShortlisted}
+              aria-label={
+                isShortlisted
+                  ? `Remove ${pet.name} from shortlist`
+                  : `Shortlist ${pet.name}`
+              }
+              className={cn(
+                "flex items-center gap-2 rounded-full border px-2 py-2 transition",
+                isShortlisted
+                  ? "border-[#ffca3a] bg-[#fff6d8] text-[#8a5b00]"
+                  : "border-primary/40 text-primary hover:bg-primary/5",
+              )}
+            >
+              <Heart
+                size={14}
+                className={cn(isShortlisted && "fill-current")}
+              />
+              <span className="sr-only">Shortlist</span>
+            </button>
+
+            <div className="flex flex-col">
+              <span className="text-slate-600 font-medium">
+                {pet.interestedCount} interested
+              </span>
+              <span className="text-slate-400">
+                {pet.activeChats} are talking for adoption
+              </span>
+            </div>
           </div>
 
           <button
@@ -150,8 +180,13 @@ const PetCard = ({ pet, onOpenDetails }) => {
               <div className="flex items-center gap-4">
                 <span>{getDaysSinceUpload(pet.uploadedAt)}</span>
                 <span className="inline-flex items-center gap-1">
-                  <Heart className="size-4 text-primary/65" />
-                  Shortlist
+                  <Heart
+                    className={cn(
+                      "size-4 text-primary/65",
+                      isShortlisted && "fill-current text-[#8a5b00]",
+                    )}
+                  />
+                  {isShortlisted ? "Shortlisted" : "Shortlist"}
                 </span>
               </div>
 

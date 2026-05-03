@@ -1,11 +1,13 @@
+import MainHeader from "@/components/navbar/main-header";
 import SideMenu from "@/components/side-menu";
 import React from "react";
 import { Outlet } from "react-router-dom";
 
 const DashboardLayout = () => {
   return (
-    <main className="bg-primary/10 min-h-screen">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+    <main className="bg-primary/5 min-h-screen">
+      <div className="mx-auto w-full max-w-7xl">
+        <MainHeader/>
         <Outlet />
       </div>
     </main>

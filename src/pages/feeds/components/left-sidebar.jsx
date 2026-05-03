@@ -1,162 +1,372 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
 import {
-  Bell,
   Bookmark,
-  MessageSquare,
-  UserRound,
-  Settings,
-  ShieldCheck,
+  Cat,
+  Dog,
+  MapPin,
+  PawPrint,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
 } from "lucide-react";
-import { useSelector } from "react-redux";
-import { cn, fallbackValue, getInitials } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { cn, getInitials } from "@/lib/utils";
+import {
+  buildAreaOptions,
+  buildTypeOptions,
+} from "@/pages/feeds/utils/feed-utils";
+import { getActiveFeedFilterCount } from "@/pages/feeds/utils/feed-filter-state";
 
-const LeftSideBar = ({ className }) => {
-  const location = useLocation();
-  const pathname = location.pathname;
-  const { user } = useSelector((state) => state.auth);
+const radiusOptions = [1, 3, 5, 10, 15];
 
-  const navItems = [
-    {
-      id: 1,
-      label: "My Profile",
-      link: `/profile/${user?.username || "my-profile"}`,
-      icon: <UserRound size={18} />,
-    },
-    {
-      id: 2,
-      label: "Messages",
-      link: "/",
-      icon: <MessageSquare size={18} />,
-    },
-    {
-      id: 3,
-      label: "Saved Pets",
-      link: "/",
-      icon: <Bookmark size={18} />,
-    },
-    {
-      id: 4,
-      label: "Alerts",
-      link: "/",
-      icon: <Bell size={18} />,
-    },
-    {
-      id: 5,
-      label: "Settings",
-      link: "/settings",
-      icon: <Settings size={18} />,
-    },
-  ];
+const fallbackTypeOptions = ["Cat", "Dog", "Rabbit", "Other"];
+const sizeOptions = ["Small", "Medium", "Large"];
+const fallbackColorOptions = ["Black", "White", "Brown", "Ginger"];
 
-  const isActiveRoute = (link) => {
-    if (link === "/") {
-      return pathname === "/";
-    }
+const LeftSideBar = ({
+  className,
+  filters,
+  pets = [],
+  shortlistedPets = [],
+  resultCount = 0,
+  onFilterChange,
+  onResetFilters,
+  onOpenPet,
+}) => {
+  const typeOptions = React.useMemo(() => {
+    const options = buildTypeOptions(pets);
+    return options.length > 0 ? options : fallbackTypeOptions;
+  }, [pets]);
 
-    return pathname === link || pathname.startsWith(`${link}/`);
-  };
+  const areaOptions = React.useMemo(() => buildAreaOptions(pets), [pets]);
 
-  const fullName = fallbackValue(
-    user?.name || `${user?.first_name || ""} ${user?.last_name || ""}`.trim(),
-    "Guest User",
+  const colorOptions = React.useMemo(() => {
+    const options = [
+      ...new Set(pets.map((pet) => pet.color).filter(Boolean)),
+    ].sort((left, right) => left.localeCompare(right));
+
+    return options.length > 0 ? options : fallbackColorOptions;
+  }, [pets]);
+
+  const activeFilterCount = getActiveFeedFilterCount(filters);
+  const radiusIndex = Math.max(
+    0,
+    radiusOptions.indexOf(Number(filters.radiusKm)),
   );
-  const role = fallbackValue(user?.role, "Adopter").toLowerCase();
-  const profileImage = user?.avatar;
-  const coverImage = user?.cover;
-  const bio = fallbackValue(
-    user?.bio,
-    role === "rescuer"
-      ? "Add a short rescue bio to build trust with adopters."
-      : "Add a short adopter bio to help rescuers know your care style.",
-  );
-  const verificationLabel = user?.is_verified ? "Verified" : "Not verified";
+  const selectedRadius = radiusOptions[radiusIndex] ?? 5;
+  const sliderProgress = (radiusIndex / (radiusOptions.length - 1)) * 100;
+  const isNearbyMode = filters.location === "nearby";
 
   return (
-    <aside className={cn("hidden xl:block", className)}>
-      <div className="sticky top-5 max-h-[calc(100vh-2.5rem)] custom-scrollbar space-y-4 pr-1">
-        <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white">
-          <div className="relative h-24 overflow-hidden bg-[#edf7f1]">
-            {coverImage ? (
-              <img
-                src={coverImage}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full bg-[radial-gradient(circle_at_18%_20%,rgba(255,214,107,0.5),transparent_32%),linear-gradient(135deg,rgba(0,79,59,0.96),rgba(19,129,91,0.82),rgba(255,248,240,0.92))]" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/35 via-slate-950/10 to-transparent" />
-          </div>
-
-          <div className="-mt-10 border-b border-slate-100 px-5 pb-5">
-            <div className="relative">
-              {profileImage ? (
-                <img
-                  src={profileImage}
-                  className="h-20 w-20 rounded-3xl border-4 border-white object-cover shadow-sm"
-                  alt={fullName}
-                />
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-3xl border-4 border-white bg-[#d7efe2] text-2xl font-semibold text-primary shadow-sm">
-                  {getInitials(fullName)}
-                </div>
-              )}
-
-              <span className="absolute left-[4.25rem] top-2 inline-flex items-center gap-1 rounded-full border border-white bg-white/95 px-2.5 py-1 text-[11px] font-semibold capitalize text-primary shadow-sm">
-                <ShieldCheck className="size-3" />
-                {verificationLabel}
-              </span>
-            </div>
-
-            <div className="mt-3 space-y-2">
+    <aside className={cn("block", className)}>
+      <div className="space-y-4 xl:custom-scrollbar xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:pr-1">
+        <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.06)]">
+          <div className="border-b border-slate-100 px-5 py-4">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold leading-tight text-slate-900">
-                  {fullName}
+                <div className="mb-3 inline-flex rounded-2xl bg-primary/8 p-2 text-primary">
+                  <SlidersHorizontal className="size-4" />
+                </div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Find nearby strays
                 </h2>
-                <p className="mt-1 text-sm capitalize text-primary">{role}</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {resultCount} matches in this feed
+                </p>
               </div>
 
-              <p className="line-clamp-2 text-sm leading-6 text-slate-500">
-                {bio}
-              </p>
+              <button
+                type="button"
+                onClick={onResetFilters}
+                className="inline-flex size-10 items-center justify-center rounded-full border border-primary/10 text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                aria-label="Reset feed filters"
+                title="Reset filters"
+              >
+                <RotateCcw className="size-4" />
+              </button>
             </div>
+
+            {activeFilterCount > 0 ? (
+              <span className="mt-4 inline-flex rounded-full bg-[#fff4c7] px-3 py-1 text-xs font-semibold text-[#7c5400]">
+                {activeFilterCount} active filters
+              </span>
+            ) : null}
+          </div>
+
+          <div className="space-y-5 px-5 py-5">
+            <label className="relative block">
+              <span className="sr-only">Search stray pets</span>
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-primary/55" />
+              <Input
+                value={filters.searchTerm}
+                onChange={(event) =>
+                  onFilterChange("searchTerm", event.target.value)
+                }
+                placeholder="Search strays or areas"
+                className="h-11 rounded-full border-primary/15 bg-[#fcfdfb] pl-11 pr-4 text-sm shadow-none focus-visible:ring-2 focus-visible:ring-primary/20"
+              />
+            </label>
+
+            <FilterBlock title="Discovery">
+              <div className="grid grid-cols-2 gap-2">
+                <FilterChip
+                  active={isNearbyMode}
+                  label="Nearby"
+                  icon={<MapPin className="size-4" />}
+                  onClick={() => onFilterChange("location", "nearby")}
+                />
+                <FilterChip
+                  active={!isNearbyMode}
+                  label="Anywhere"
+                  icon={<PawPrint className="size-4" />}
+                  onClick={() => onFilterChange("location", "anywhere")}
+                />
+              </div>
+
+              <div
+                className={cn(
+                  "mt-4 rounded-[24px] border border-primary/10 bg-[#f7faf8] p-4 transition",
+                  !isNearbyMode && "opacity-55",
+                )}
+              >
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      Location radius
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Bumble-style distance control
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#ffcf36] px-3 py-1 text-sm font-bold text-[#4b3900]">
+                    {selectedRadius}km
+                  </span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0"
+                  max={radiusOptions.length - 1}
+                  step="1"
+                  value={radiusIndex}
+                  disabled={!isNearbyMode}
+                  onChange={(event) =>
+                    onFilterChange(
+                      "radiusKm",
+                      String(radiusOptions[Number(event.target.value)]),
+                    )
+                  }
+                  className="radius-slider"
+                  style={{ "--range-progress": `${sliderProgress}%` }}
+                  aria-label="Location radius"
+                />
+
+                <div className="mt-3 flex justify-between text-[11px] font-semibold text-slate-400">
+                  {radiusOptions.map((option) => (
+                    <span key={option}>{option}km</span>
+                  ))}
+                </div>
+              </div>
+            </FilterBlock>
+
+            <FilterBlock title="Pet type">
+              <div className="grid grid-cols-2 gap-2">
+                <FilterChip
+                  active={filters.petType === "all"}
+                  label="Any pet"
+                  icon={<PawPrint className="size-4" />}
+                  onClick={() => onFilterChange("petType", "all")}
+                />
+                {typeOptions.map((type) => (
+                  <FilterChip
+                    key={type}
+                    active={filters.petType === type}
+                    label={type}
+                    icon={type === "Cat" ? <Cat className="size-4" /> : <Dog className="size-4" />}
+                    onClick={() => onFilterChange("petType", type)}
+                  />
+                ))}
+              </div>
+            </FilterBlock>
+
+            <FilterBlock title="Size">
+              <div className="grid grid-cols-2 gap-2">
+                <FilterChip
+                  active={filters.size === "all"}
+                  label="Any size"
+                  onClick={() => onFilterChange("size", "all")}
+                />
+                {sizeOptions.map((size) => (
+                  <FilterChip
+                    key={size}
+                    active={filters.size === size}
+                    label={size}
+                    onClick={() => onFilterChange("size", size)}
+                  />
+                ))}
+              </div>
+            </FilterBlock>
+
+            <FilterBlock title="Area">
+              <select
+                value={filters.area}
+                onChange={(event) => onFilterChange("area", event.target.value)}
+                className="h-11 w-full rounded-2xl border border-primary/15 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+              >
+                <option value="all">All areas</option>
+                {areaOptions.map((area) => (
+                  <option key={area} value={area}>
+                    {area}
+                  </option>
+                ))}
+              </select>
+            </FilterBlock>
+
+            <FilterBlock title="Color">
+              <div className="flex flex-wrap gap-2">
+                <FilterChip
+                  active={filters.color === "all"}
+                  label="Any"
+                  compact
+                  onClick={() => onFilterChange("color", "all")}
+                />
+                {colorOptions.map((color) => (
+                  <FilterChip
+                    key={color}
+                    active={filters.color === color}
+                    label={color}
+                    compact
+                    swatch={getColorSwatch(color)}
+                    onClick={() => onFilterChange("color", color)}
+                  />
+                ))}
+              </div>
+            </FilterBlock>
           </div>
         </section>
-        <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white p-4">
-          <nav className="space-y-2">
-            {navItems.map((item) => {
-              const isActive = isActiveRoute(item.link);
 
-              return (
-                <Link
-                  key={item.id}
-                  to={item.link}
-                  className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
-                    isActive
-                      ? "text-primary"
-                      : "bg-white/75 text-slate-700 hover:bg-white hover:text-primary"
-                  }`}
+        <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.06)]">
+          <div className="border-b border-slate-100 px-5 py-4">
+            <div className="mb-3 inline-flex rounded-2xl bg-[#fff4c7] p-2 text-[#8a5b00]">
+              <Bookmark className="size-4 fill-current" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Shortlisted strays
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {shortlistedPets.length} saved for later
+            </p>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {shortlistedPets.length > 0 ? (
+              shortlistedPets.slice(0, 4).map((pet) => (
+                <button
+                  key={pet.id}
+                  type="button"
+                  onClick={() => onOpenPet?.(pet)}
+                  className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-[#f7faf8]"
                 >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+                  <PetThumb pet={pet} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-900">
+                      {pet.name}
+                    </span>
+                    <span className="mt-1 block truncate text-xs text-slate-500">
+                      {pet.location}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary">
+                    {formatDistance(pet)}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <div className="px-5 py-5 text-sm leading-6 text-slate-500">
+                Tap the heart on a stray card to keep it here.
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </aside>
   );
 };
 
-const ProfileDetail = ({ icon, value }) => {
+const FilterBlock = ({ title, children }) => (
+  <div>
+    <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+      {title}
+    </h3>
+    {children}
+  </div>
+);
+
+const FilterChip = ({
+  active,
+  label,
+  icon,
+  swatch,
+  compact = false,
+  onClick,
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cn(
+      "inline-flex min-w-0 items-center justify-center gap-2 rounded-2xl border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25",
+      compact ? "px-3 py-2" : "px-3 py-3",
+      active
+        ? "border-primary bg-primary text-white shadow-[0_12px_28px_rgba(0,79,59,0.18)]"
+        : "border-primary/10 bg-white text-slate-700 hover:border-primary/25 hover:bg-primary/5 hover:text-primary",
+    )}
+  >
+    {swatch ? (
+      <span
+        className="size-3 shrink-0 rounded-full border border-black/10"
+        style={{ backgroundColor: swatch }}
+      />
+    ) : null}
+    {icon}
+    <span className="truncate">{label}</span>
+  </button>
+);
+
+const PetThumb = ({ pet }) => {
+  const image = pet.images?.[0] || pet.image;
+
+  if (image) {
+    return (
+      <img
+        src={image}
+        alt=""
+        className="size-12 shrink-0 rounded-2xl object-cover"
+      />
+    );
+  }
+
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <span className="shrink-0 text-primary/70">{icon}</span>
-      <span className="truncate">{value}</span>
-    </div>
+    <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#d7efe2] text-sm font-semibold text-primary">
+      {getInitials(pet.name)}
+    </span>
   );
+};
+
+const formatDistance = (pet) =>
+  pet.distanceKm ? `${pet.distanceKm}km` : pet.isNearby ? "Near" : "Saved";
+
+const getColorSwatch = (color) => {
+  const swatches = {
+    black: "#111827",
+    white: "#ffffff",
+    brown: "#8b5e34",
+    ginger: "#d97706",
+    orange: "#f97316",
+    gray: "#9ca3af",
+    grey: "#9ca3af",
+  };
+
+  return swatches[color.toLowerCase()] || "#d7efe2";
 };
 
 export default LeftSideBar;
