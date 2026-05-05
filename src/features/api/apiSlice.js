@@ -83,6 +83,8 @@ export const apiSlice = createApi({
     "pets",
     "petDetails",
     "rescuerPets",
+    "userRescuedPets",
+    "userAdoptionPets",
     "reviews",
     "adoptionRequests",
     "adoptionRequestStatus",

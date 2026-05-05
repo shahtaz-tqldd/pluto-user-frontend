@@ -69,7 +69,6 @@ const MainHeader = () => {
     user?.name || `${user?.first_name || ""} ${user?.last_name || ""}`.trim(),
     "Guest User",
   );
-  const role = fallbackValue(user?.role, "Adopter");
   const profileImage = user?.avatar || user?.profile_picture_url;
   const profilePath = `/profile/${user?.username || "my-profile"}`;
 
@@ -129,7 +128,6 @@ const MainHeader = () => {
           <AlertMenu />
           <ProfileMenu
             fullName={fullName}
-            role={role}
             profileImage={profileImage}
             profilePath={profilePath}
             onLogout={handleLogout}
@@ -211,7 +209,6 @@ const AlertMenu = () => (
 
 const ProfileMenu = ({
   fullName,
-  role,
   profileImage,
   profilePath,
   onLogout,
@@ -239,7 +236,7 @@ const ProfileMenu = ({
             {fullName}
           </span>
           <span className="block truncate text-xs capitalize text-slate-500">
-            {role}
+            Member
           </span>
         </span>
         <ChevronDown className="hidden size-4 shrink-0 text-slate-400 sm:block" />
@@ -266,7 +263,7 @@ const ProfileMenu = ({
             {fullName}
           </span>
           <span className="block truncate text-xs capitalize text-slate-500">
-            {role}
+            Member
           </span>
         </span>
       </DropdownMenuLabel>

@@ -40,6 +40,22 @@ export const petApiSlice = apiSlice.injectEndpoints({
       providesTags: ["rescuerPets"],
     }),
 
+    userRescuedList: builder.query({
+      query: () => ({
+        url: "/pets/user-rescued-list/",
+        method: "GET",
+      }),
+      providesTags: ["userRescuedPets"],
+    }),
+
+    userAdoptionList: builder.query({
+      query: () => ({
+        url: "/pets/user-adoption-list/",
+        method: "GET",
+      }),
+      providesTags: ["userAdoptionPets"],
+    }),
+
     userRequestStatus: builder.query({
       query: (petId) => ({
         url: `/pets/user-request-status/${petId}/`,
@@ -93,6 +109,8 @@ export const {
   useCreatePetMutation,
   usePetListQuery,
   useRescuerPetListQuery,
+  useUserRescuedListQuery,
+  useUserAdoptionListQuery,
   usePetDetailsQuery,
   useUserRequestStatusQuery,
   useUserRequestListQuery,

@@ -36,7 +36,6 @@ const RegisterPage = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      role: "adopter",
       name: "",
       email: "",
       password: "",
@@ -52,7 +51,7 @@ const RegisterPage = () => {
 
     try {
       const response = await registration({
-        role: data.role.toUpperCase(),
+        role: "USER",
         name: data.name.trim(),
         email: data.email.trim(),
         password: data.password,
@@ -104,44 +103,6 @@ const RegisterPage = () => {
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                <Controller
-                  name="role"
-                  control={control}
-                  rules={{ required: "Role is required" }}
-                  render={({ field }) => (
-                    <div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {["adopter", "rescuer"].map((role) => (
-                          <label
-                            key={role}
-                            className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                              field.value === role
-                                ? "border-primary bg-primary/5 text-primary ring-4 ring-primary/10"
-                                : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={field.name}
-                              value={role}
-                              checked={field.value === role}
-                              onChange={() => field.onChange(role)}
-                              onBlur={field.onBlur}
-                              className="size-4 accent-primary"
-                            />
-                            as {role === "adopter" ? "an" : "a"} {role}
-                          </label>
-                        ))}
-                      </div>
-                      {errors.role?.message && (
-                        <p className="mt-1 text-xs text-red-500">
-                          {errors.role.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                />
-
                 <Controller
                   name="name"
                   control={control}

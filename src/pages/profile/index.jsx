@@ -3,9 +3,7 @@ import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { createSelfProfile, getProfileByUsername } from "./data/profile-data";
 import ProfileCover from "./components/cover";
-import RescuerProfile from "./rescuer-profile";
-import AdopterProfile from "./adopter-profile";
-import ProfileReviews from "./components/profile-reviews";
+import UserProfile from "./user-profile";
 
 const getUserUsername = (user) => {
   if (user?.username) {
@@ -30,27 +28,12 @@ const ProfilePage = () => {
     getProfileByUsername(username) ||
     createSelfProfile(user, username || currentUsername);
 
-  const isRescuer = profile.role === "rescuer";
-
   return (
     <div className="space-y-4 py-6">
-      <ProfileCover
-        profile={profile}
-        isRescuer={isRescuer}
-        isSelfView={isSelfView}
-      />
+      <ProfileCover profile={profile} isSelfView={isSelfView} />
 
-      <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          {isRescuer ? (
-            <RescuerProfile profile={profile} />
-          ) : (
-            <AdopterProfile profile={profile} />
-          )}
-        </div>
-        <div className="lg:col-span-1">
-          <ProfileReviews profile={profile} />
-        </div>
+      <div className="mt-4">
+        <UserProfile profile={profile} />
       </div>
     </div>
   );

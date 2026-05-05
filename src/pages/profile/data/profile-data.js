@@ -43,7 +43,7 @@ export const profileDirectory = [
   {
     username: "nadia-rahman",
     slug: "nadia-rahman",
-    role: "rescuer",
+    role: "user",
     name: "Nadia Rahman",
     avatar: createProfileIllustration({
       name: "Nadia Rahman",
@@ -114,7 +114,7 @@ export const profileDirectory = [
       {
         id: "review-01",
         author: "Tasmia Noor",
-        role: "Adopter",
+        role: "Member",
         rating: "5.0",
         summary: "Transparent from first message to handover.",
         body: "Nadia shared treatment details, food routines, and checked in after adoption. The process felt organized and genuine.",
@@ -130,7 +130,7 @@ export const profileDirectory = [
       {
         id: "review-03",
         author: "Maliha Tasnim",
-        role: "Adopter",
+        role: "Member",
         rating: "5.0",
         summary: "Strong follow-up after adoption.",
         body: "The trust came from how carefully she screened us and how available she stayed after the handover.",
@@ -140,7 +140,7 @@ export const profileDirectory = [
   {
     username: "aisha-karim",
     slug: "aisha-karim",
-    role: "adopter",
+    role: "user",
     name: "Aisha Karim",
     avatar: createProfileIllustration({
       name: "Aisha Karim",
@@ -229,7 +229,7 @@ export const profileDirectory = [
       {
         id: "review-11",
         author: "Tahsin Alam",
-        role: "Rescuer",
+        role: "Member",
         rating: "4.8",
         summary: "Consistent and responsive adopter.",
         body: "Aisha asked practical care questions and kept every follow-up promise after the handover.",
@@ -237,7 +237,7 @@ export const profileDirectory = [
       {
         id: "review-12",
         author: "Nadia Rahman",
-        role: "Rescuer",
+        role: "Member",
         rating: "4.7",
         summary: "Strong long-term commitment.",
         body: "Her home setup matched what she described, and the update trail after adoption was reliable.",
@@ -245,7 +245,7 @@ export const profileDirectory = [
       {
         id: "review-13",
         author: "Sabrina Jahan",
-        role: "Rescuer",
+        role: "Member",
         rating: "4.5",
         summary: "Good communication during review.",
         body: "Careful and polite throughout the screening process. Would approve another request with normal checks.",
@@ -262,12 +262,9 @@ export const createSelfProfile = (user, username) => {
     user?.name ||
     `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
     "Guest User";
-  const normalizedRole = (user?.role || "adopter").toLowerCase();
-  const role = normalizedRole.includes("rescu") ? "rescuer" : "adopter";
+  const role = "user";
   const fallbackBio =
-    role === "rescuer"
-      ? "Building a transparent rescue profile with active pet listings, adoption follow-ups, and community trust."
-      : "Building an adopter profile with adoption history, rescuer feedback, and care commitments.";
+    "Building a transparent profile with pet posts, rescue history, adoption follow-ups, and community trust.";
 
   return {
     username,
@@ -279,9 +276,9 @@ export const createSelfProfile = (user, username) => {
       user?.profile_picture_url ||
       createProfileIllustration({
         name: fullName,
-        accent: role === "rescuer" ? "#004f3b" : "#8a4b12",
-        accentSoft: role === "rescuer" ? "#d7efe2" : "#fbe7d8",
-        highlight: role === "rescuer" ? "#ffd66b" : "#0ea5a4",
+        accent: "#004f3b",
+        accentSoft: "#d7efe2",
+        highlight: "#ffd66b",
       }),
     cover:
       user?.cover || user?.cover_image || user?.cover_url || user?.cover_image_url || "",
@@ -294,34 +291,19 @@ export const createSelfProfile = (user, username) => {
     status: user?.status || "",
     joinedAt: user?.date_joined || user?.created_at || "",
     joinedLabel: "Your profile",
-    trustScore: role === "rescuer" ? "4.8/5" : "4.6/5",
+    trustScore: "4.7/5",
     responseTime: "Updates from your recent activity",
-    stats:
-      role === "rescuer"
-        ? [
-            { label: "Rescued", value: "12" },
-            { label: "Available", value: "4" },
-            { label: "Adopted", value: "7" },
-            { label: "Reviews", value: "9" },
-          ]
-        : [
-            { label: "Adopted", value: "2" },
-            { label: "Active requests", value: "1" },
-            { label: "Reviews", value: "6" },
-            { label: "Check-ins", value: "8" },
-          ],
-    trustSignals:
-      role === "rescuer"
-        ? [
-            "Add rescue notes to every listing",
-            "Keep adopter follow-up updates visible",
-            "Collect reviews after completed handovers",
-          ]
-        : [
-            "Add home readiness details",
-            "Keep post-adoption updates visible",
-            "Ask rescuers for public feedback after handover",
-          ],
+    stats: [
+      { label: "Posts", value: "4" },
+      { label: "Rescued", value: "7" },
+      { label: "Adoptions", value: "2" },
+      { label: "Reviews", value: "9" },
+    ],
+    trustSignals: [
+      "Add clear care notes to every listing",
+      "Keep post-adoption updates visible",
+      "Collect reviews after completed handovers",
+    ],
     privateHighlights: [
       {
         label: "Profile strength",

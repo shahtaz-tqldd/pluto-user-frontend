@@ -16,19 +16,14 @@ import { fallbackValue, getInitials } from "@/lib/utils";
 import { formatJoinedDate } from "@/lib/date-time";
 import UpdateProfileDialog from "./update-profile-dialog";
 
-const ProfileCover = ({ profile, isRescuer, isSelfView }) => {
+const ProfileCover = ({ profile, isSelfView }) => {
   const displayName = fallbackValue(profile.name, "Guest User");
   const displayBio = fallbackValue(
     profile.shortBio,
-    isRescuer
-      ? "Rescue profile details are being updated."
-      : "Adopter profile details are being updated.",
+    "Profile details are being updated.",
   );
   const displayLocation = fallbackValue(profile.location, "Location not set");
-  const displayJobTitle = fallbackValue(
-    profile.jobTitle,
-    isRescuer ? "Community rescuer" : "Adopter",
-  );
+  const displayJobTitle = fallbackValue(profile.jobTitle, "Community member");
 
   return (
     <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_16px_44px_rgba(2,24,19,0.06)]">
@@ -66,7 +61,7 @@ const ProfileCover = ({ profile, isRescuer, isSelfView }) => {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-primary/8 px-3 py-1 text-xs font-semibold capitalize text-primary">
-                    {isRescuer ? "Rescuer" : "Adopter"}
+                    Member
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                     {profile.isVerified ? (
@@ -108,18 +103,16 @@ const ProfileCover = ({ profile, isRescuer, isSelfView }) => {
           <div className="flex flex-wrap items-center gap-3 xl:justify-end">
             {isSelfView ? (
               <>
-                {isRescuer && (
-                  <CreatePetPostDialog
-                    title="Upload rescue post"
-                    description="Add a new rescue listing with the care details adopters rely on before sending a request."
-                    trigger={
-                      <Button className="rounded-full px-4">
-                        <PawPrint className="size-4" />
-                        Upload pet
-                      </Button>
-                    }
-                  />
-                )}
+                <CreatePetPostDialog
+                  title="Upload pet post"
+                  description="Add a new pet listing with the care details adopters rely on before sending a request."
+                  trigger={
+                    <Button className="rounded-full px-4">
+                      <PawPrint className="size-4" />
+                      Upload pet
+                    </Button>
+                  }
+                />
                 <UpdateProfileDialog profile={profile} />
               </>
             ) : (

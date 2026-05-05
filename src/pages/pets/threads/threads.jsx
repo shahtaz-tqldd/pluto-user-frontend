@@ -6,17 +6,22 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  ImagePlus,
   Lock,
   LoaderCircle,
   MessageCircle,
   PawPrint,
   Send,
+  Trash2,
   UserRound,
   UsersRound,
+  Wifi,
+  WifiOff,
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
+import { getTokens } from "@/hooks/useToken";
 import {
   useCreatePetRequestMutation,
   useUpdatePetRequestMutation,
@@ -37,9 +42,12 @@ const extractRequestList = (response) => {
 };
 
 const getStatus = (request) =>
-  (request?.status || request?.request_status || "idle").toString().toLowerCase();
+  (request?.status || request?.request_status || "idle")
+    .toString()
+    .toLowerCase();
 
-const getRequestId = (request) => request?.id || request?.request_id || request?.uuid;
+const getRequestId = (request) =>
+  request?.id || request?.request_id || request?.uuid;
 
 const getRequesterName = (request) =>
   request?.adopter?.name ||
@@ -55,6 +63,278 @@ const getRequesterName = (request) =>
 const getRequestIntention = (request) =>
   request?.intention || request?.adoption_intention || request?.message || "";
 
+const getUserId = (user) => user?.id || user?.user_id || user?.uuid || null;
+
+const getSocketBaseUrl = () => {
+  const baseUrl = import.meta.env.VITE_APP_SOCKET_URL;
+
+  if (!baseUrl) return "";
+
+  const absoluteUrl = /^https?:\/\//i.test(baseUrl)
+    ? baseUrl
+    : `${window.location.origin}${baseUrl.startsWith("/") ? "" : "/"}${baseUrl}`;
+
+  return absoluteUrl.replace(/^http/i, "ws").replace(/\/api\/?$/i, "");
+};
+
+const buildThreadSocketUrl = ({ petId, requestId }) => {
+  const baseUrl = getSocketBaseUrl();
+
+  if (!baseUrl || !petId || !requestId) return "";
+
+  const { accessToken } = getTokens();
+  const configuredPath = import.meta.env.VITE_APP_BACKEND_BASE;
+  const path = (configuredPath || `/ws/pets/threads/${petId}/`).replace(
+    "{petId}",
+    petId,
+  );
+  const normalizedBase = baseUrl.replace(/\/$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = new URL(`${normalizedBase}${normalizedPath}`);
+
+  url.searchParams.set("request_id", requestId);
+  if (accessToken) url.searchParams.set("token", accessToken);
+
+  return url.toString();
+};
+
+const normalizeMessage = (message, currentUserId) => {
+  const sender =
+    message?.sender ||
+    message?.author ||
+    message?.user ||
+    message?.created_by ||
+    null;
+  const senderId =
+    message?.sender_id ||
+    message?.author_id ||
+    message?.user_id ||
+    getUserId(sender);
+  const author =
+    sender?.name ||
+    sender?.username ||
+    message?.sender_name ||
+    message?.author_name ||
+    message?.user_name ||
+    "Participant";
+  const body =
+    message?.body ||
+    message?.text ||
+    message?.content ||
+    message?.message ||
+    "";
+  const image =
+    message?.image ||
+    message?.image_url ||
+    message?.attachment ||
+    message?.attachment_url ||
+    null;
+
+  return {
+    id:
+      message?.id ||
+      message?.message_id ||
+      message?.uuid ||
+      message?.client_id ||
+      crypto.randomUUID(),
+    clientId: message?.client_id || message?.clientId || null,
+    author,
+    body,
+    image,
+    createdAt: message?.created_at || message?.timestamp || null,
+    align:
+      senderId && currentUserId && `${senderId}` === `${currentUserId}`
+        ? "right"
+        : "left",
+    pending: Boolean(message?.pending),
+  };
+};
+
+const normalizeIncomingMessages = (payload, currentUserId) => {
+  const data = payload?.data ?? payload;
+  const messages =
+    (Array.isArray(data) && data) ||
+    (Array.isArray(data?.messages) && data.messages) ||
+    (Array.isArray(data?.results) && data.results) ||
+    null;
+  const message =
+    data?.message && typeof data.message === "object" ? data.message : data;
+
+  if (messages) {
+    return messages.map((item) => normalizeMessage(item, currentUserId));
+  }
+
+  if (!message || typeof message !== "object") return [];
+
+  return [normalizeMessage(message, currentUserId)];
+};
+
+const readImageAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+const useThreadSocket = ({ petId, requestId, enabled, currentUser }) => {
+  const socketRef = React.useRef(null);
+  const reconnectTimerRef = React.useRef(null);
+  const reconnectAttemptRef = React.useRef(0);
+  const currentUserId = getUserId(currentUser);
+  const threadKey = `${petId || "pet"}:${requestId || "request"}`;
+  const [messageState, setMessageState] = React.useState({
+    threadKey,
+    items: [],
+  });
+  const [connectionState, setConnectionState] = React.useState("idle");
+  const socketUrl = React.useMemo(
+    () => buildThreadSocketUrl({ petId, requestId }),
+    [petId, requestId],
+  );
+
+  React.useEffect(() => {
+    if (!enabled || !socketUrl) {
+      return undefined;
+    }
+
+    let closedByEffect = false;
+
+    const connect = () => {
+      setConnectionState("connecting");
+      const socket = new WebSocket(socketUrl);
+      socketRef.current = socket;
+
+      socket.onopen = () => {
+        reconnectAttemptRef.current = 0;
+        setConnectionState("open");
+        socket.send(
+          JSON.stringify({
+            type: "join_thread",
+            pet_id: petId,
+            request_id: requestId,
+          }),
+        );
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const incoming = normalizeIncomingMessages(payload, currentUserId);
+
+          if (!incoming.length) return;
+
+          setMessageState((current) => {
+            const currentItems =
+              current.threadKey === threadKey ? current.items : [];
+            const next = [...currentItems];
+
+            incoming.forEach((message) => {
+              const index = next.findIndex(
+                (item) =>
+                  item.id === message.id ||
+                  (message.clientId && item.clientId === message.clientId),
+              );
+
+              if (index >= 0) {
+                next[index] = { ...next[index], ...message, pending: false };
+              } else {
+                next.push(message);
+              }
+            });
+
+            return { threadKey, items: next };
+          });
+        } catch (error) {
+          console.error("Could not parse thread socket message:", error);
+        }
+      };
+
+      socket.onerror = () => {
+        setConnectionState("error");
+      };
+
+      socket.onclose = () => {
+        if (closedByEffect) return;
+
+        setConnectionState("closed");
+        const attempt = reconnectAttemptRef.current + 1;
+        reconnectAttemptRef.current = attempt;
+        const delay = Math.min(1000 * attempt, 5000);
+
+        reconnectTimerRef.current = window.setTimeout(connect, delay);
+      };
+    };
+
+    connect();
+
+    return () => {
+      closedByEffect = true;
+      window.clearTimeout(reconnectTimerRef.current);
+      socketRef.current?.close();
+      socketRef.current = null;
+    };
+  }, [currentUserId, enabled, petId, requestId, socketUrl, threadKey]);
+
+  const sendMessage = React.useCallback(
+    async ({ text, imageFile }) => {
+      const socket = socketRef.current;
+
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        throw new Error("Thread socket is not connected.");
+      }
+
+      const trimmedText = text.trim();
+      const image = imageFile ? await readImageAsDataUrl(imageFile) : null;
+      const clientId = crypto.randomUUID();
+      const message = {
+        id: clientId,
+        clientId,
+        author: currentUser?.name || currentUser?.username || "You",
+        body: trimmedText,
+        image,
+        align: "right",
+        pending: true,
+      };
+
+      setMessageState((current) => ({
+        threadKey,
+        items: [
+          ...(current.threadKey === threadKey ? current.items : []),
+          message,
+        ],
+      }));
+      socket.send(
+        JSON.stringify({
+          type: "message",
+          event: "message",
+          pet_id: petId,
+          request_id: requestId,
+          client_id: clientId,
+          message_type: image ? "image" : "text",
+          text: trimmedText,
+          image,
+          file_name: imageFile?.name || null,
+          file_type: imageFile?.type || null,
+        }),
+      );
+    },
+    [currentUser, petId, requestId, threadKey],
+  );
+
+  return {
+    messages: messageState.threadKey === threadKey ? messageState.items : [],
+    connectionState:
+      enabled && !socketUrl
+        ? "unavailable"
+        : enabled
+          ? connectionState
+          : "idle",
+    sendMessage,
+  };
+};
+
 const CurrentThread = ({ pet, petId }) => {
   const { user } = useSelector((state) => state.auth);
   const isOwner = Boolean(pet?.is_mine);
@@ -68,9 +348,13 @@ const CurrentThread = ({ pet, petId }) => {
     useCreatePetRequestMutation();
   const [updatePetRequest, { isLoading: isUpdatingRequest }] =
     useUpdatePetRequestMutation();
+  const messageListRef = React.useRef(null);
+  const fileInputRef = React.useRef(null);
   const [draft, setDraft] = React.useState("");
+  const [imageFile, setImageFile] = React.useState(null);
+  const [imagePreview, setImagePreview] = React.useState("");
+  const [isSendingMessage, setIsSendingMessage] = React.useState(false);
   const [intention, setIntention] = React.useState("");
-  const [userMessages, setUserMessages] = React.useState(() => []);
   const currentRequest = extractPayload(requestStatusQuery.data);
   const requestStatus = getStatus(currentRequest);
   const requests = React.useMemo(
@@ -84,11 +368,23 @@ const CurrentThread = ({ pet, petId }) => {
   const threadUnlocked = isOwner
     ? acceptedRequests.length > 0
     : requestStatus === "accepted";
+  const activeRequest = isOwner ? acceptedRequests[0] : currentRequest;
+  const activeRequestId = getRequestId(activeRequest);
+  const {
+    messages: threadMessages,
+    connectionState,
+    sendMessage,
+  } = useThreadSocket({
+    petId,
+    requestId: activeRequestId,
+    enabled: threadUnlocked,
+    currentUser: user,
+  });
   const systemMessage = threadUnlocked
     ? {
         id: "system-accepted",
         author: isOwner
-          ? getRequesterName(acceptedRequests[0])
+          ? getRequesterName(activeRequest)
           : pet?.rescuer_name || "Post owner",
         body: isOwner
           ? "This request has been accepted. Messaging can continue here."
@@ -96,7 +392,25 @@ const CurrentThread = ({ pet, petId }) => {
         align: "left",
       }
     : null;
-  const messages = systemMessage ? [systemMessage, ...userMessages] : [];
+  const messages = systemMessage ? [systemMessage, ...threadMessages] : [];
+  const canSendMessage =
+    threadUnlocked &&
+    connectionState === "open" &&
+    !isSendingMessage &&
+    Boolean(draft.trim() || imageFile);
+
+  React.useEffect(() => {
+    if (!messageListRef.current) return;
+
+    messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+  }, [messages.length]);
+
+  React.useEffect(
+    () => () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    },
+    [imagePreview],
+  );
 
   const handleCreateRequest = async () => {
     const trimmedIntention = intention.trim();
@@ -138,21 +452,42 @@ const CurrentThread = ({ pet, petId }) => {
     }
   };
 
-  const handleSendMessage = (event) => {
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Select an image file.");
+      event.target.value = "";
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearSelectedImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSendMessage = async (event) => {
     event.preventDefault();
 
-    if (!draft.trim() || !threadUnlocked) return;
+    if (!canSendMessage) return;
 
-    setUserMessages((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        author: user?.name || user?.username || "You",
-        body: draft.trim(),
-        align: "right",
-      },
-    ]);
-    setDraft("");
+    try {
+      setIsSendingMessage(true);
+      await sendMessage({ text: draft, imageFile });
+      setDraft("");
+      clearSelectedImage();
+    } catch (error) {
+      toast.error(error?.message || "Failed to send message.");
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
   return (
     <aside className="sticky top-5 overflow-hidden rounded-[28px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.08)] lg:col-span-2">
@@ -165,9 +500,10 @@ const CurrentThread = ({ pet, petId }) => {
             <h2 className="text-lg font-bold text-slate-900">
               Adoption thread
             </h2>
-            <p className="text-sm text-slate-500">
-              {pet.rescuer_name || "Post owner"}
-            </p>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <span>{pet.rescuer_name || "Post owner"}</span>
+              {threadUnlocked ? <SocketStatus state={connectionState} /> : null}
+            </div>
           </div>
         </div>
       </div>
@@ -189,7 +525,10 @@ const CurrentThread = ({ pet, petId }) => {
         />
 
         <div className="flex h-[520px] flex-col rounded-[24px] border border-primary/10 bg-[#fbfdfb]">
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+          <div
+            ref={messageListRef}
+            className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
+          >
             {!threadUnlocked ? (
               <LockedThread />
             ) : (
@@ -201,27 +540,74 @@ const CurrentThread = ({ pet, petId }) => {
 
           <form
             onSubmit={handleSendMessage}
-            className="flex gap-2 border-t border-primary/10 p-3"
+            className="space-y-3 border-t border-primary/10 p-3"
           >
-            <input
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              disabled={!threadUnlocked}
-              placeholder={
-                threadUnlocked
-                  ? "Write a message"
-                  : "Chat unlocks after acceptance"
-              }
-              className="min-w-0 flex-1 rounded-full border border-primary/10 bg-white px-4 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary/40 disabled:bg-slate-100"
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="rounded-full"
-              disabled={!threadUnlocked || !draft.trim()}
-            >
-              <Send className="size-4" />
-            </Button>
+            {imagePreview ? (
+              <div className="flex items-center gap-3 rounded-[18px] border border-primary/10 bg-white p-2">
+                <img
+                  src={imagePreview}
+                  alt="Selected attachment"
+                  className="size-14 rounded-[14px] object-cover"
+                />
+                <p className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
+                  {imageFile?.name}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full text-slate-500 hover:text-red-700"
+                  onClick={clearSelectedImage}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            ) : null}
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+                disabled={!threadUnlocked}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0 rounded-full"
+                disabled={!threadUnlocked}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <ImagePlus className="size-4" />
+              </Button>
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                disabled={!threadUnlocked || isSendingMessage}
+                placeholder={
+                  threadUnlocked
+                    ? connectionState === "open"
+                      ? "Write a message"
+                      : "Connecting to chat..."
+                    : "Chat unlocks after acceptance"
+                }
+                className="min-w-0 flex-1 rounded-full border border-primary/10 bg-white px-4 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary/40 disabled:bg-slate-100"
+              />
+              <Button
+                type="submit"
+                size="icon"
+                className="shrink-0 rounded-full"
+                disabled={!canSendMessage}
+              >
+                {isSendingMessage ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Send className="size-4" />
+                )}
+              </Button>
+            </div>
           </form>
         </div>
       </div>
@@ -257,10 +643,43 @@ const ChatBubble = ({ message }) => (
       )}
     >
       <p className="text-xs font-semibold opacity-70">{message.author}</p>
-      <p className="mt-1 leading-6">{message.body}</p>
+      {message.image ? (
+        <img
+          src={message.image}
+          alt="Message attachment"
+          className="mt-2 max-h-60 rounded-[16px] object-cover"
+        />
+      ) : null}
+      {message.body ? <p className="mt-1 leading-6">{message.body}</p> : null}
+      {message.pending ? (
+        <p className="mt-1 text-[11px] opacity-60">Sending...</p>
+      ) : null}
     </div>
   </div>
 );
+
+const SocketStatus = ({ state }) => {
+  const connected = state === "open";
+  const label = connected
+    ? "Connected"
+    : state === "connecting"
+      ? "Connecting"
+      : "Offline";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        connected
+          ? "bg-[#f0fff6] text-[#0d7a4c]"
+          : "bg-slate-100 text-slate-500",
+      )}
+    >
+      {connected ? <Wifi className="size-3" /> : <WifiOff className="size-3" />}
+      {label}
+    </span>
+  );
+};
 
 const RequestPanel = ({
   isOwner,
@@ -423,7 +842,9 @@ const OwnerRequestPanel = ({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                     <UserRound className="size-4 shrink-0 text-primary" />
-                    <span className="truncate">{getRequesterName(request)}</span>
+                    <span className="truncate">
+                      {getRequesterName(request)}
+                    </span>
                   </div>
                   <StatusBadge status={status} />
                   {requestIntention ? (

@@ -150,7 +150,14 @@ export const getDaysSinceUpload = (uploadedAt) => {
 };
 
 export const normalizePetListResponse = (response) => {
-  const pets = Array.isArray(response?.data) ? response.data : [];
+  const payload = response?.data ?? response;
+  const pets = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.results)
+      ? payload.results
+      : Array.isArray(payload?.pets)
+        ? payload.pets
+        : [];
 
   return pets.map((pet) => {
     const images = [

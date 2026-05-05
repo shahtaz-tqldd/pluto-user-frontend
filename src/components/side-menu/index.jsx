@@ -81,8 +81,7 @@ const SideMenu = () => {
   const { user } = useSelector((state) => state.auth);
   const fullName = user
     ? `${user.first_name} ${user.last_name}`.trim()
-    : "Guest Adopter";
-  const role = user ? user.role : "Adopter";
+    : "Guest User";
   const profileImage = user?.profile_picture_url;
 
   return (
@@ -117,7 +116,7 @@ const SideMenu = () => {
                 <h2 className="text-lg font-semibold text-slate-900">
                   {fullName}
                 </h2>
-                <p className="text-sm capitalize text-slate-500">{role}</p>
+                <p className="text-sm capitalize text-slate-500">Member</p>
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2 text-center">
