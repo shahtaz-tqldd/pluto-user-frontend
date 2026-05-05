@@ -251,7 +251,7 @@ const FeedHeader = ({
               <ProfileMenuItem to={profilePath} icon={<UserRound />}>
                 My profile
               </ProfileMenuItem>
-              <ProfileMenuItem to="/feed" icon={<PawPrint />}>
+              <ProfileMenuItem to="/feeds" icon={<PawPrint />}>
                 Adopt Pets
               </ProfileMenuItem>
               <ProfileMenuItem to="/" icon={<MessageCircle />}>

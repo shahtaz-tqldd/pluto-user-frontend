@@ -247,3 +247,202 @@ button {
 .error-bounce {
   animation: error-bounce-in 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+@keyframes pawpal-doodle-pop-1 {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.55) rotate(-5deg);
+  }
+  6% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.12) rotate(2deg);
+  }
+  10%,
+  78% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  88%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.75) rotate(4deg);
+  }
+}
+
+@keyframes pawpal-doodle-pop-2 {
+  0%,
+  14% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.55) rotate(-5deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.12) rotate(2deg);
+  }
+  24%,
+  78% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  88%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.75) rotate(4deg);
+  }
+}
+
+@keyframes pawpal-doodle-pop-3 {
+  0%,
+  28% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.55) rotate(-5deg);
+  }
+  34% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.12) rotate(2deg);
+  }
+  38%,
+  78% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  88%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.75) rotate(4deg);
+  }
+}
+
+@keyframes pawpal-doodle-pop-4 {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.55) rotate(-5deg);
+  }
+  48% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.12) rotate(2deg);
+  }
+  52%,
+  78% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  88%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.75) rotate(4deg);
+  }
+}
+
+@keyframes pawpal-doodle-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes pawpal-doodle-link-1 {
+  0%,
+  8% {
+    opacity: 0;
+  }
+  14%,
+  78% {
+    opacity: 1;
+  }
+  88%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pawpal-doodle-link-2 {
+  0%,
+  22% {
+    opacity: 0;
+  }
+  28%,
+  78% {
+    opacity: 1;
+  }
+  88%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pawpal-doodle-link-3 {
+  0%,
+  36% {
+    opacity: 0;
+  }
+  42%,
+  78% {
+    opacity: 1;
+  }
+  88%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.pawpal-doodle-tile,
+.pawpal-doodle-line,
+.pawpal-doodle-arrowhead {
+  opacity: 0;
+  animation-duration: 6.8s;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pawpal-doodle-line {
+  transform-origin: left center;
+}
+
+.pawpal-doodle-step-1 {
+  animation-name: pawpal-doodle-pop-1;
+}
+
+.pawpal-doodle-step-2 {
+  animation-name: pawpal-doodle-pop-2;
+}
+
+.pawpal-doodle-step-3 {
+  animation-name: pawpal-doodle-pop-3;
+}
+
+.pawpal-doodle-step-4 {
+  animation-name: pawpal-doodle-pop-4;
+}
+
+.pawpal-doodle-line.pawpal-doodle-step-1,
+.pawpal-doodle-arrowhead.pawpal-doodle-step-1 {
+  animation-name: pawpal-doodle-link-1;
+}
+
+.pawpal-doodle-line.pawpal-doodle-step-2,
+.pawpal-doodle-arrowhead.pawpal-doodle-step-2 {
+  animation-name: pawpal-doodle-link-2;
+}
+
+.pawpal-doodle-line.pawpal-doodle-step-3,
+.pawpal-doodle-arrowhead.pawpal-doodle-step-3 {
+  animation-name: pawpal-doodle-link-3;
+}
+
+.pawpal-doodle-heart {
+  animation: pawpal-doodle-heartbeat 1.55s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pawpal-doodle-tile,
+  .pawpal-doodle-heart,
+  .pawpal-doodle-line,
+  .pawpal-doodle-arrowhead {
+    animation: none;
+  }
+}

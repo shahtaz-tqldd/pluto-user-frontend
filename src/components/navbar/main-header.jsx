@@ -82,11 +82,11 @@ const MainHeader = () => {
 
       navigate(
         {
-          pathname: "/",
+          pathname: "/feeds",
           search: search ? `?${search}` : "",
         },
         {
-          replace: location.pathname === "/",
+          replace: location.pathname === "/feeds",
         },
       );
     },
@@ -275,7 +275,7 @@ const ProfileMenu = ({
         My profile
       </ProfileMenuItem>
       <ProfileMenuItem to="/feeds" icon={<PawPrint />}>
-        Adopt pets
+        Adopt Pets
       </ProfileMenuItem>
       <ProfileMenuItem to="/" icon={<MessageCircle />}>
         Messages

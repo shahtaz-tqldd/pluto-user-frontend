@@ -70,7 +70,7 @@ const FeedPage = () => {
 
       navigate(
         {
-          pathname: "/",
+          pathname: "/feeds",
           search: search ? `?${search}` : "",
         },
         { replace: true },
