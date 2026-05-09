@@ -2,7 +2,6 @@ import { apiSlice } from "../api/apiSlice";
 
 export const authApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // personal profile
     login: builder.mutation({
       query: (data) => {
         return {

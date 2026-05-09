@@ -16,7 +16,7 @@ export const petApiSlice = apiSlice.injectEndpoints({
 
     petList: builder.query({
       query: () => ({
-        url: "/pets/",
+        url: "/pets/feed/",
         method: "GET",
       }),
       providesTags: ["pets"],
@@ -86,6 +86,7 @@ export const petApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: (_result, _error, { petId }) => [
         { type: "adoptionRequestStatus", id: petId },
         { type: "petDetails", id: petId },
+        "petConvList",
       ],
     }),
 
@@ -100,6 +101,7 @@ export const petApiSlice = apiSlice.injectEndpoints({
         { type: "adoptionRequests", id: petId },
         { type: "adoptionRequestStatus", id: petId },
         { type: "petDetails", id: petId },
+        "petConvList",
       ],
     }),
   }),

@@ -79,6 +79,7 @@ export const apiSlice = createApi({
   tagTypes: [
     "auth",
     "myProfile",
+    "userProfile",
     "my-profile",
     "pets",
     "petDetails",
@@ -88,6 +89,8 @@ export const apiSlice = createApi({
     "reviews",
     "adoptionRequests",
     "adoptionRequestStatus",
+    "petConvList",
+    "chatMessages",
   ],
   keepUnusedDataFor: 300,
   refetchOnMountOrArgChange: false,

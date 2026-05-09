@@ -249,12 +249,12 @@ const UpdateProfileDialog = ({ profile }) => {
               {avatarPreview ? (
                 <img
                   src={avatarPreview}
-                  alt={profile.name}
+                  alt={profile?.name}
                   className="h-full w-full object-cover"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-primary/8 text-xl font-semibold text-primary">
-                  {getInitials(profile.name)}
+                  {getInitials(profile?.name)}
                 </div>
               )}
               <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 transition group-hover:opacity-100">
@@ -315,7 +315,7 @@ const UpdateProfileDialog = ({ profile }) => {
             <FloatingInput
               name="name"
               label="Name"
-              value={formState.name}
+              value={formState?.name}
               onChange={(event) => handleChange("name", event.target.value)}
             />
             <FloatingInput

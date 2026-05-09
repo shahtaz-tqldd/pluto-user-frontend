@@ -119,12 +119,12 @@ const ChartTooltipContent = React.forwardRef(
                     style={{ backgroundColor: indicatorColor }}
                   />
                   <span className="text-sm text-slate-600">
-                    {itemConfig.label ?? item.name}
+                    {itemConfig.label ?? item?.name}
                   </span>
                 </div>
                 <span className="text-sm font-semibold text-slate-950">
                   {formatter
-                    ? formatter(item.value, item.name, item, uniquePayload)
+                    ? formatter(item?.value, item?.name, item, uniquePayload)
                     : item.value}
                 </span>
               </div>

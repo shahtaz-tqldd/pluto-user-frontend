@@ -70,7 +70,7 @@ const FeedPage = () => {
 
       navigate(
         {
-          pathname: "/",
+          pathname: "/feeds",
           search: search ? `?${search}` : "",
         },
         { replace: true },
@@ -109,28 +109,18 @@ const FeedPage = () => {
   return (
     <div className="py-4">
       <div className="flex flex-col gap-4 xl:flex-row">
-        <LeftSideBar
-          className="w-full xl:w-[23rem] xl:max-w-sm"
-          filters={filters}
-          pets={pets}
-          shortlistedPets={shortlistedPets}
-          resultCount={filteredPets.length}
-          onFilterChange={handleFilterChange}
-          onResetFilters={resetFeedFilters}
-          onOpenPet={(pet) => navigate(buildPetThreadPath(pet))}
-        />
-
         <div className="min-w-0 flex-1 space-y-5 pb-8">
           <section className="space-y-5">
             {isLoading ? (
               <FeedStatusCard message="Loading pets..." />
             ) : isError ? (
               <FeedStatusCard message="Could not load pets right now." />
-            ) : filteredPets.length > 0 ? (
-              filteredPets.map((pet) => (
+            ) : data?.data?.length > 0 ? (
+              data?.data?.map((pet) => (
                 <PetCard
                   key={pet.id}
                   pet={pet}
+                  variant="feed"
                   isShortlisted={shortlistIds.includes(String(pet.id))}
                   onToggleShortlist={() => toggleShortlist(pet.id)}
                   onOpenDetails={() => navigate(buildPetThreadPath(pet))}
@@ -141,10 +131,15 @@ const FeedPage = () => {
             )}
           </section>
         </div>
-
-        <RightSidebar
-          pets={filteredPets.length > 0 ? filteredPets : pets}
+        <LeftSideBar
           className="w-full xl:w-[23rem] xl:max-w-sm"
+          filters={filters}
+          pets={pets}
+          shortlistedPets={shortlistedPets}
+          resultCount={filteredPets.length}
+          onFilterChange={handleFilterChange}
+          onResetFilters={resetFeedFilters}
+          onOpenPet={(pet) => navigate(buildPetThreadPath(pet))}
         />
       </div>
     </div>

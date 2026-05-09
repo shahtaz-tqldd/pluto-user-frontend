@@ -81,11 +81,11 @@ const MainHeader = () => {
 
       navigate(
         {
-          pathname: "/",
+          pathname: "/feeds",
           search: search ? `?${search}` : "",
         },
         {
-          replace: location.pathname === "/",
+          replace: location.pathname === "/feeds",
         },
       );
     },
@@ -98,22 +98,9 @@ const MainHeader = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 pt-4">
-      <div className="mx-auto flex w-full max-w-7xl items-center gap-3 rounded-[26px] border border-primary/10 bg-white/95 px-3 py-3">
-        <Link
-          to="/"
-          className="flex min-w-0 items-center gap-3 rounded-2xl px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-          aria-label="Pawpal home feed"
-        >
-          <img src="/favicon.png" className="size-8 shrink-0" alt="" />
-          <span className="hidden min-w-0 sm:block">
-            <span className="block truncate text-3xl logo-pixel font-bold leading-tight text-primary">
-              Pawpal
-            </span>
-          </span>
-        </Link>
-
-        <label className="relative mx-auto hidden min-w-0 max-w-xl flex-1 md:block">
+    <header className="sticky top-0 z-40">
+      <div className="mx-auto flex w-full max-w-7xl items-center gap-3 border-b border-b-primary/10 bg-white/10 backdrop-blur-xl px-5 py-3">
+        <label className="relative hidden min-w-0 max-w-xl flex-1 md:block">
           <span className="sr-only">Search feed</span>
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-primary/55" />
           <Input
@@ -207,12 +194,7 @@ const AlertMenu = () => (
   </DropdownMenu>
 );
 
-const ProfileMenu = ({
-  fullName,
-  profileImage,
-  profilePath,
-  onLogout,
-}) => (
+const ProfileMenu = ({ fullName, profileImage, profilePath, onLogout }) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <button
@@ -272,7 +254,7 @@ const ProfileMenu = ({
         My profile
       </ProfileMenuItem>
       <ProfileMenuItem to="/feeds" icon={<PawPrint />}>
-        Adopt pets
+        Adopt Pets
       </ProfileMenuItem>
       <ProfileMenuItem to="/" icon={<MessageCircle />}>
         Messages

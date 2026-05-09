@@ -20,7 +20,6 @@ const RightSidebar = ({ pets, className }) => {
   return (
     <aside className={cn("hidden xl:block", className)}>
       <div className="sticky top-24 max-h-[calc(100vh-7rem)] custom-scrollbar space-y-4 pr-1">
-        <FeedSummary />
         <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white">
           <div className="border-b border-slate-100 px-5 py-4">
             <div className="mb-2 inline-flex rounded-2xl bg-primary/8 p-2 text-primary">

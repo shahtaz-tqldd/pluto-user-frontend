@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Bookmark,
   Cat,
   Dog,
   MapPin,
@@ -27,11 +26,9 @@ const LeftSideBar = ({
   className,
   filters,
   pets = [],
-  shortlistedPets = [],
   resultCount = 0,
   onFilterChange,
   onResetFilters,
-  onOpenPet,
 }) => {
   const typeOptions = React.useMemo(() => {
     const options = buildTypeOptions(pets);
@@ -59,8 +56,8 @@ const LeftSideBar = ({
 
   return (
     <aside className={cn("block", className)}>
-      <div className="space-y-4 xl:custom-scrollbar xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:pr-1">
-        <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.06)]">
+      <div className="custom-scrollbar xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)]">
+        <section className="">
           <div className="border-b border-slate-100 px-5 py-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -182,7 +179,13 @@ const LeftSideBar = ({
                     key={type}
                     active={filters.petType === type}
                     label={type}
-                    icon={type === "Cat" ? <Cat className="size-4" /> : <Dog className="size-4" />}
+                    icon={
+                      type === "Cat" ? (
+                        <Cat className="size-4" />
+                      ) : (
+                        <Dog className="size-4" />
+                      )
+                    }
                     onClick={() => onFilterChange("petType", type)}
                   />
                 ))}
@@ -242,50 +245,6 @@ const LeftSideBar = ({
                 ))}
               </div>
             </FilterBlock>
-          </div>
-        </section>
-
-        <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_18px_48px_rgba(2,24,19,0.06)]">
-          <div className="border-b border-slate-100 px-5 py-4">
-            <div className="mb-3 inline-flex rounded-2xl bg-[#fff4c7] p-2 text-[#8a5b00]">
-              <Bookmark className="size-4 fill-current" />
-            </div>
-            <h2 className="text-lg font-semibold text-slate-900">
-              Shortlisted strays
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              {shortlistedPets.length} saved for later
-            </p>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {shortlistedPets.length > 0 ? (
-              shortlistedPets.slice(0, 4).map((pet) => (
-                <button
-                  key={pet.id}
-                  type="button"
-                  onClick={() => onOpenPet?.(pet)}
-                  className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-[#f7faf8]"
-                >
-                  <PetThumb pet={pet} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-slate-900">
-                      {pet.name}
-                    </span>
-                    <span className="mt-1 block truncate text-xs text-slate-500">
-                      {pet.location}
-                    </span>
-                  </span>
-                  <span className="shrink-0 rounded-full bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary">
-                    {formatDistance(pet)}
-                  </span>
-                </button>
-              ))
-            ) : (
-              <div className="px-5 py-5 text-sm leading-6 text-slate-500">
-                Tap the heart on a stray card to keep it here.
-              </div>
-            )}
           </div>
         </section>
       </div>
@@ -351,9 +310,6 @@ const PetThumb = ({ pet }) => {
     </span>
   );
 };
-
-const formatDistance = (pet) =>
-  pet.distanceKm ? `${pet.distanceKm}km` : pet.isNearby ? "Near" : "Saved";
 
 const getColorSwatch = (color) => {
   const swatches = {

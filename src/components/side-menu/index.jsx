@@ -47,7 +47,7 @@ const SideMenu = () => {
     {
       id: 4,
       label: "Adopt a pet",
-      link: "/feed",
+      link: "/feeds",
       icon: <PawPrint size={18} />,
     },
     {

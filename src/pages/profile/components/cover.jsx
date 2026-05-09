@@ -17,7 +17,7 @@ import { formatJoinedDate } from "@/lib/date-time";
 import UpdateProfileDialog from "./update-profile-dialog";
 
 const ProfileCover = ({ profile, isSelfView }) => {
-  const displayName = fallbackValue(profile.name, "Guest User");
+  const displayName = fallbackValue(profile?.name, "Guest User");
   const displayBio = fallbackValue(
     profile.shortBio,
     "Profile details are being updated.",

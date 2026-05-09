@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   CalendarDays,
   HeartHandshake,
@@ -9,102 +9,6 @@ import {
 } from "lucide-react";
 import { useReviewListQuery } from "@/features/reviews/reviewApiSlice";
 import { fallbackValue, getInitials } from "@/lib/utils";
-
-const mockReviews = [
-  {
-    id: "review-01",
-    adoption: {
-      id: "adoption-01",
-      completed_at: "2026-04-21T10:30:00.000Z",
-    },
-    pet: {
-      id: "pet-01",
-      name: "Milo",
-      type: "Dog",
-      breed: "Indie",
-      image: "",
-    },
-    reviewer: {
-      id: "user-nadia",
-      name: "Nadia Rahman",
-      role: "RESCUER",
-      avatar: "",
-    },
-    reviewee: {
-      id: "user-shahtaz",
-      name: "Shahtaz Shanto",
-      role: "ADOPTER",
-      avatar: "",
-    },
-    direction: "RESCUER_TO_ADOPTER",
-    rating: 5,
-    comment:
-      "Shahtaz came prepared with home photos, asked thoughtful care questions, and sent helpful follow-up updates after Milo settled in.",
-    created_at: "2026-04-25T08:15:00.000Z",
-  },
-  {
-    id: "review-02",
-    adoption: {
-      id: "adoption-02",
-      completed_at: "2026-04-12T16:00:00.000Z",
-    },
-    pet: {
-      id: "pet-02",
-      name: "Tuni",
-      type: "Cat",
-      breed: "Domestic Shorthair",
-      image: "",
-    },
-    reviewer: {
-      id: "user-shahtaz",
-      name: "Shahtaz Shanto",
-      role: "ADOPTER",
-      avatar: "",
-    },
-    reviewee: {
-      id: "user-tahsin",
-      name: "Tahsin Alam",
-      role: "RESCUER",
-      avatar: "",
-    },
-    direction: "ADOPTER_TO_RESCUER",
-    rating: 4.8,
-    comment:
-      "Tahsin shared Tuni's treatment notes, food routine, and vaccination details before handover. The process felt careful and transparent.",
-    created_at: "2026-04-16T11:45:00.000Z",
-  },
-  {
-    id: "review-03",
-    adoption: {
-      id: "adoption-03",
-      completed_at: "2026-03-29T13:20:00.000Z",
-    },
-    pet: {
-      id: "pet-03",
-      name: "Bhulu",
-      type: "Dog",
-      breed: "Labrador Mix",
-      image: "",
-    },
-    reviewer: {
-      id: "user-sabrina",
-      name: "Sabrina Jahan",
-      role: "RESCUER",
-      avatar: "",
-    },
-    reviewee: {
-      id: "user-shahtaz",
-      name: "Shahtaz Shanto",
-      role: "ADOPTER",
-      avatar: "",
-    },
-    direction: "RESCUER_TO_ADOPTER",
-    rating: 4.7,
-    comment:
-      "Good communication through screening and pickup. The adopter followed the walking plan and kept the first-week check-in on time.",
-    created_at: "2026-04-03T14:10:00.000Z",
-  },
-];
 
 const getResponseReviews = (response) => {
   if (Array.isArray(response)) return response;
@@ -188,8 +92,8 @@ const PetReference = ({ pet, adoption }) => {
       <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/8 text-primary">
         {pet.image ? (
           <img
-            src={pet.image}
-            alt={pet.name}
+            src={pet?.image}
+            alt={pet?.name}
             className="h-full w-full object-cover"
           />
         ) : (
@@ -198,7 +102,7 @@ const PetReference = ({ pet, adoption }) => {
       </div>
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-slate-900">
-          {fallbackValue(pet.name, "Adopted pet")}
+          {fallbackValue(pet?.name, "Adopted pet")}
         </p>
         <p className="mt-1 truncate text-xs text-slate-500">
           {[pet.type, pet.breed].filter(Boolean).join(" • ") ||
@@ -221,7 +125,7 @@ const ReviewCard = ({ review }) => {
           <ReviewAvatar person={review.reviewer} />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-slate-900">
-              {fallbackValue(review.reviewer.name, "Reviewer")}
+              {fallbackValue(review.reviewer?.name, "Reviewer")}
             </p>
             <p className="mt-1 text-xs capitalize text-slate-500">
               Reviewed by {roleLabel(review.reviewer.role)}
@@ -249,19 +153,17 @@ const ReviewCard = ({ review }) => {
   );
 };
 
-const ProfileReviews = ({ profile }) => {
-  const { data, isLoading } = useReviewListQuery();
+const ProfileReviews = ({ profile, isSelfView = false }) => {
+  const { data, isLoading } = useReviewListQuery(undefined, {
+    skip: !isSelfView,
+  });
   const apiReviews = getResponseReviews(data);
-
-  const reviews = useMemo(() => {
-    if (isLoading) return [];
-
-    const source = apiReviews.length > 0 ? apiReviews : mockReviews;
-    return source.map(normalizeReview);
-  }, [apiReviews, isLoading]);
+  const profileReviews = Array.isArray(profile?.reviews) ? profile.reviews : [];
+  const reviewSource = apiReviews.length > 0 ? apiReviews : profileReviews;
+  const reviews = isLoading ? [] : reviewSource.map(normalizeReview);
 
   return (
-    <section className="overflow-hidden rounded-[30px] border border-primary/10 bg-white shadow-[0_16px_40px_rgba(2,24,19,0.05)]">
+    <section className="overflow-hidden h-fit rounded-[30px] border border-primary/10 bg-white shadow-[0_16px_40px_rgba(2,24,19,0.05)]">
       <div className="border-b border-slate-100 px-5 py-4">
         <div className="mb-3 inline-flex rounded-2xl bg-primary/8 p-2 text-primary">
           <HeartHandshake className="size-4" />

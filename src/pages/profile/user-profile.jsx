@@ -29,13 +29,19 @@ const tabs = [
 const isAdoptedPet = (pet) =>
   pet.rawPet?.status?.toString().toLowerCase() === "adopted";
 
-const UserProfile = ({ profile }) => {
-  const [activeTab, setActiveTab] = React.useState("posts");
+const UserProfile = ({ profile, isSelfView = false }) => {
+  const [activeTab, setActiveTab] = React.useState(
+    isSelfView ? "posts" : "about",
+  );
+  const selectedTab = tabs.some((tab) => tab.id === activeTab)
+    ? activeTab
+    : tabs[0].id;
+
   const rescuedQuery = useUserRescuedListQuery(undefined, {
-    skip: activeTab === "adoptions" || activeTab === "about",
+    skip: !isSelfView || selectedTab === "adoptions" || selectedTab === "about",
   });
   const adoptionQuery = useUserAdoptionListQuery(undefined, {
-    skip: activeTab !== "adoptions",
+    skip: !isSelfView || selectedTab !== "adoptions",
   });
 
   const rescuedPets = React.useMemo(
@@ -56,62 +62,66 @@ const UserProfile = ({ profile }) => {
   );
 
   const activePets =
-    activeTab === "posts"
+    selectedTab === "posts"
       ? postedPets
-      : activeTab === "rescued"
+      : selectedTab === "rescued"
         ? completedRescues
-        : activeTab === "adoptions"
+        : selectedTab === "adoptions"
           ? adoptionPets
           : [];
-  const activeQuery = activeTab === "adoptions" ? adoptionQuery : rescuedQuery;
+  const activeQuery =
+    selectedTab === "adoptions" ? adoptionQuery : rescuedQuery;
 
   return (
-    <section className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-full border border-primary/10 bg-white p-1 shadow-sm">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition",
-                activeTab === tab.id
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-slate-600 hover:bg-primary/5 hover:text-primary",
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+    <section className="grid grid-cols-3 gap-5">
+      <div className="col-span-2 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex rounded-full border border-primary/10 bg-white p-1 shadow-sm">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition",
+                  selectedTab === tab.id
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-slate-600 hover:bg-primary/5 hover:text-primary",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {activeTab === "about" ? (
-        <AboutPanel profile={profile} />
-      ) : activeQuery.isLoading ? (
-        <PetGridSkeleton />
-      ) : activeQuery.isError ? (
-        <EmptyState message="Could not load pets right now." />
-      ) : activePets.length === 0 ? (
-        <EmptyState message={getEmptyMessage(activeTab)} />
-      ) : (
-        <div className="grid gap-5 xl:grid-cols-2">
-          {activePets.map((pet) =>
-            activeTab === "posts" ? (
-              <PetCard key={pet.id} pet={pet} />
-            ) : (
-              <RescueHistoryCard key={pet.id} pet={pet} tab={activeTab} />
-            ),
-          )}
-        </div>
-      )}
+        {selectedTab === "about" ? (
+          <AboutPanel profile={profile} isSelfView={isSelfView} />
+        ) : activeQuery.isLoading ? (
+          <PetGridSkeleton />
+        ) : activeQuery.isError ? (
+          <EmptyState message="Could not load pets right now." />
+        ) : activePets.length === 0 ? (
+          <EmptyState message={getEmptyMessage(selectedTab)} />
+        ) : (
+          <div className="grid gap-5 xl:grid-cols-2">
+            {activePets.map((pet) =>
+              selectedTab === "posts" ? (
+                <PetCard key={pet.id} pet={pet} />
+              ) : (
+                <RescueHistoryCard key={pet.id} pet={pet} tab={selectedTab} />
+              ),
+            )}
+          </div>
+        )}
+      </div>
+      <ProfileReviews profile={profile} isSelfView={isSelfView} />
     </section>
   );
 };
 
 const AboutPanel = ({ profile }) => (
-  <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+  <div className="">
     <article className="rounded-[30px] border border-primary/10 bg-white p-5 shadow-[0_18px_48px_rgba(2,24,19,0.08)]">
       <div className="flex items-center gap-3">
         <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -142,8 +152,6 @@ const AboutPanel = ({ profile }) => (
         <ProfileFact label="Public Trust" value={profile?.trustScore} />
       </div>
     </article>
-
-    <ProfileReviews profile={profile} />
   </div>
 );
 
@@ -172,7 +180,7 @@ const RescueHistoryCard = ({ pet, tab }) => {
         {primaryImage ? (
           <img
             src={primaryImage}
-            alt={`${pet.name} photo`}
+            alt={`${pet?.name} photo`}
             className="h-80 w-full object-cover"
           />
         ) : (
@@ -191,7 +199,7 @@ const RescueHistoryCard = ({ pet, tab }) => {
           </span>
         </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#041612]/95 via-[#041612]/78 to-transparent px-5 pb-5 pt-12 text-white sm:px-6">
-          <h2 className="mt-3 text-2xl font-bold text-white">{pet.name}</h2>
+          <h2 className="mt-3 text-2xl font-bold text-white">{pet?.name}</h2>
           <p className="mt-1 text-sm text-white/80">{pet.label}</p>
         </div>
       </div>
