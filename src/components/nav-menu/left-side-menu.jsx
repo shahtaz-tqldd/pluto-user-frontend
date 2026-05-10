@@ -11,9 +11,6 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import FeedSummary from "@/pages/feeds/components/feed-summary";
-import { Button } from "../ui/button";
-import CreatePetPostDialog from "@/features/pets/components/create-pet-post-dialog";
 
 const LeftSideMenu = () => {
   const location = useLocation();

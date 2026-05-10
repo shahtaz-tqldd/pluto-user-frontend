@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Cat,
-  Dog,
-  MapPin,
-  PawPrint,
-  RotateCcw,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Cat, Dog, MapPin, PawPrint, RotateCcw, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn, getInitials } from "@/lib/utils";
 import {
@@ -22,7 +14,7 @@ const fallbackTypeOptions = ["Cat", "Dog", "Rabbit", "Other"];
 const sizeOptions = ["Small", "Medium", "Large"];
 const fallbackColorOptions = ["Black", "White", "Brown", "Ginger"];
 
-const LeftSideBar = ({
+const FeedRightSidebar = ({
   className,
   filters,
   pets = [],
@@ -61,9 +53,6 @@ const LeftSideBar = ({
           <div className="border-b border-slate-100 px-5 py-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="mb-3 inline-flex rounded-2xl bg-primary/8 p-2 text-primary">
-                  <SlidersHorizontal className="size-4" />
-                </div>
                 <h2 className="text-lg font-semibold text-slate-900">
                   Find nearby strays
                 </h2>
@@ -325,4 +314,4 @@ const getColorSwatch = (color) => {
   return swatches[color.toLowerCase()] || "#d7efe2";
 };
 
-export default LeftSideBar;
+export default FeedRightSidebar;

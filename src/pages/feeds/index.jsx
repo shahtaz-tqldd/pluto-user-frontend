@@ -11,11 +11,10 @@ import {
   getFeedFiltersFromSearch,
 } from "./utils/feed-filter-state";
 import EmptyFeedState from "./components/empty-feed-state";
-import RightSidebar from "./components/right-sidebar";
-import LeftSideBar from "./components/left-sidebar";
 
 import { usePetListQuery } from "@/features/pets/petApiSlice";
 import PetCard from "../pets/pet-card";
+import FeedRightSidebar from "./components/feed-right-sidebar";
 
 const SHORTLIST_STORAGE_KEY = "pawpal-shortlisted-strays";
 
@@ -58,11 +57,6 @@ const FeedPage = () => {
     radiusKm: filters.radiusKm,
     color: filters.color,
   });
-
-  const shortlistedPets = React.useMemo(() => {
-    const shortlist = new Set(shortlistIds);
-    return pets.filter((pet) => shortlist.has(String(pet.id)));
-  }, [pets, shortlistIds]);
 
   const navigateToFilteredFeed = React.useCallback(
     (nextFilters) => {
@@ -131,15 +125,13 @@ const FeedPage = () => {
             )}
           </section>
         </div>
-        <LeftSideBar
+        <FeedRightSidebar
           className="w-full xl:w-[23rem] xl:max-w-sm"
           filters={filters}
           pets={pets}
-          shortlistedPets={shortlistedPets}
           resultCount={filteredPets.length}
           onFilterChange={handleFilterChange}
           onResetFilters={resetFeedFilters}
-          onOpenPet={(pet) => navigate(buildPetThreadPath(pet))}
         />
       </div>
     </div>

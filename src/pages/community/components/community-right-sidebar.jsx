@@ -13,7 +13,7 @@ const trendingTopics = [
   ["#dogrescue", 76],
 ];
 
-const CommunityRightRail = ({ className }) => {
+const CommunityRighSidebar = ({ className }) => {
   return (
     <aside
       className={cn(
@@ -93,4 +93,4 @@ const CommunityRightRail = ({ className }) => {
   );
 };
 
-export default CommunityRightRail;
+export default CommunityRighSidebar;
