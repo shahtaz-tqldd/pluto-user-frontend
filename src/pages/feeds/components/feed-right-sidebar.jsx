@@ -50,15 +50,12 @@ const FeedRightSidebar = ({
     <aside className={cn("block", className)}>
       <div className="custom-scrollbar xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)]">
         <section className="">
-          <div className="border-b border-slate-100 px-5 py-4">
+          <div className="border-b border-slate-100 px-5">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
                   Find nearby strays
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {resultCount} matches in this feed
-                </p>
               </div>
 
               <button

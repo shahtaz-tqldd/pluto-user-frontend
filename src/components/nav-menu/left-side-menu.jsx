@@ -6,7 +6,6 @@ import {
   House,
   MessageSquare,
   PawPrint,
-  Plus,
   Settings,
   Sparkles,
   Users,
@@ -25,14 +24,14 @@ const LeftSideMenu = () => {
     },
     {
       id: 2,
-      label: "Find Pets",
+      label: "Adopt Pets",
       link: "/feeds",
       icon: <PawPrint size={18} />,
     },
     {
       id: 3,
       label: "Messages",
-      link: "/",
+      link: "/chat",
       icon: <MessageSquare size={18} />,
     },
     {

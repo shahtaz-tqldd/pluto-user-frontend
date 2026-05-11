@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Clock,
   Edit3,
-  ImageOff,
   ImagePlus,
   LoaderCircle,
   MapPin,
@@ -43,6 +42,7 @@ import {
 import { useSelector } from "react-redux";
 import CommunityRighSidebar from "./components/community-right-sidebar";
 import CreatePost from "./components/create-post";
+import { Link } from "react-router-dom";
 
 const postTypeConfig = {
   LOST_AND_FOUND: {
@@ -81,12 +81,26 @@ const fallbackPostType = {
 const helpCategoryLabels = {
   URGENT_RESCUE: "Urgent rescue",
   MEDICAL: "Medical",
-  MEDICAL_HELP: "Medical help",
-  FOSTER_NEEDED: "Foster needed",
+  FOSTER: "Foster",
   TRANSPORT: "Transport",
   SUPPLIES: "Supplies",
   OTHER: "Other help",
 };
+
+const postTypeFilterOptions = [
+  "LOST_PET",
+  "FOUND_PET",
+  "HELP_SEEKING",
+  "DISCUSSION",
+].map((value) => ({
+  value,
+  label: postTypeConfig[value].label,
+  icon: postTypeConfig[value].icon,
+}));
+
+const helpCategoryFilterOptions = Object.entries(helpCategoryLabels).map(
+  ([value, label]) => ({ value, label }),
+);
 
 const getInitials = (name = "") =>
   name
@@ -310,9 +324,59 @@ const buildPostChips = (post) => {
   return chips;
 };
 
+const useDebouncedValue = (value, delay = 400) => {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
+
+  React.useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const CommunityPage = () => {
-  const { data, isLoading, isFetching, isError, refetch } = usePostListQuery();
-  const posts = data?.data || [];
+  const [filters, setFilters] = React.useState({
+    search: "",
+    postType: "",
+    helpCategory: "",
+  });
+  const debouncedSearch = useDebouncedValue(filters.search.trim());
+  const postListFilters = React.useMemo(
+    () => ({
+      search: debouncedSearch,
+      postType: filters.postType,
+      helpCategory:
+        filters.postType === "HELP_SEEKING" ? filters.helpCategory : "",
+    }),
+    [debouncedSearch, filters.helpCategory, filters.postType],
+  );
+  const { data, isLoading, isFetching, isError, refetch } =
+    usePostListQuery(postListFilters);
+  const posts = getCollection(data);
+
+  const handleFiltersChange = (nextFilters) => {
+    setFilters((current) => {
+      const updatedFilters = { ...current, ...nextFilters };
+
+      if (updatedFilters.postType !== "HELP_SEEKING") {
+        updatedFilters.helpCategory = "";
+      }
+
+      return updatedFilters;
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      postType: "",
+      helpCategory: "",
+    });
+  };
 
   return (
     <div className="flex flex-col gap-4 py-4 xl:flex-row">
@@ -353,7 +417,14 @@ const CommunityPage = () => {
         ) : null}
       </main>
 
-      <CommunityRighSidebar className="w-full xl:w-[48rem] xl:max-w-sm" />
+      <CommunityRighSidebar
+        className="w-full xl:w-[48rem] xl:max-w-sm"
+        filters={filters}
+        postTypes={postTypeFilterOptions}
+        helpCategories={helpCategoryFilterOptions}
+        onFiltersChange={handleFiltersChange}
+        onClearFilters={clearFilters}
+      />
     </div>
   );
 };
@@ -407,18 +478,14 @@ const CommunityPost = ({ post }) => {
   const [commentsOpen, setCommentsOpen] = React.useState(false);
   const [togglePostSave, { isLoading: isSaving }] = useTogglePostSaveMutation();
 
-  if (
-    post.post_type === "LOST_AND_FOUND" ||
-    post.post_type === "LOST_PET" ||
-    post.post_type === "FOUND_PET"
-  ) {
+  if (post.post_type === "LOST_PET" || post.post_type === "FOUND_PET") {
     return <LostAndFoundPost post={post} />;
   }
 
   const config = postTypeConfig[post.post_type] || fallbackPostType;
   const TypeIcon = config.icon;
   const owner = post.owner || {};
-  const images = [...(post.images || [])].sort(
+  const images = getItemImages(post).sort(
     (first, second) => first.sort_order - second.sort_order,
   );
   const currentImage = images[activeImage];
@@ -447,8 +514,8 @@ const CommunityPost = ({ post }) => {
 
   return (
     <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.05)]">
-      <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="p-5">
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="p-5 flex-1">
           <div className="flex gap-4">
             <Avatar owner={owner} />
 
@@ -525,16 +592,17 @@ const CommunityPost = ({ post }) => {
             </button>
           </div>
         </div>
-
-        <PostImageGallery
-          images={images}
-          currentImage={currentImage}
-          activeImage={activeImage}
-          onPrevious={showPreviousImage}
-          onNext={showNextImage}
-          onSelect={setActiveImage}
-          position="right"
-        />
+        {images.length ? (
+          <PostImageGallery
+            images={images}
+            currentImage={currentImage}
+            activeImage={activeImage}
+            onPrevious={showPreviousImage}
+            onNext={showNextImage}
+            onSelect={setActiveImage}
+            position="right"
+          />
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 text-sm font-semibold text-slate-600">
@@ -633,9 +701,7 @@ const PostCommentsPanel = ({ postId }) => {
         ) : null}
 
         {!isLoading && !isError && !comments.length ? (
-          <p className="text-sm font-medium text-slate-500">
-            No comments yet.
-          </p>
+          <p className="text-sm font-medium text-slate-500">No comments yet.</p>
         ) : null}
 
         {comments.map((comment) => (
@@ -822,11 +888,12 @@ const CommentItem = ({
 };
 
 const CommentReplies = ({ postId, commentId, currentUser }) => {
-  const { data, isLoading, isError, refetch } = useCommentRepliesQuery(commentId);
+  const { data, isLoading, isError, refetch } =
+    useCommentRepliesQuery(commentId);
   const replies = getCollection(data);
 
   return (
-    <div className="mt-3 space-y-3">
+    <div className="mt-3 space-y-1">
       {isLoading ? (
         <p className="ml-8 text-xs font-semibold text-slate-400">
           Loading replies
@@ -922,7 +989,10 @@ const CommentForm = ({
       {visibleExistingImages.length || image ? (
         <div className="flex flex-wrap gap-2">
           {visibleExistingImages.map((item) => (
-            <div key={item.id} className="relative size-20 overflow-hidden rounded-xl">
+            <div
+              key={item.id}
+              className="relative size-20 overflow-hidden rounded-xl"
+            >
               <img
                 src={item.image_url}
                 alt=""
@@ -1042,10 +1112,11 @@ const LostAndFoundPost = ({ post }) => {
   const [activeImage, setActiveImage] = React.useState(0);
   const [isSightingOpen, setIsSightingOpen] = React.useState(false);
   const [hasReportedSighting, setHasReportedSighting] = React.useState(false);
-  const config = postTypeConfig[post.post_type] || postTypeConfig.LOST_AND_FOUND;
+  const config =
+    postTypeConfig[post.post_type] || postTypeConfig.LOST_AND_FOUND;
   const TypeIcon = config.icon;
   const owner = post.owner || {};
-  const images = [...(post.images || [])].sort(
+  const images = getItemImages(post).sort(
     (first, second) => first.sort_order - second.sort_order,
   );
   const currentImage = images[activeImage];
@@ -1065,16 +1136,24 @@ const LostAndFoundPost = ({ post }) => {
   return (
     <>
       <article className="overflow-hidden rounded-[24px] border border-amber-100 bg-white shadow-[0_18px_54px_rgba(15,23,42,0.06)]">
-        <div className="grid gap-0 lg:grid-cols-[minmax(18rem,0.78fr)_minmax(0,1.22fr)]">
-          <PostImageGallery
-            images={images}
-            currentImage={currentImage}
-            activeImage={activeImage}
-            onPrevious={showPreviousImage}
-            onNext={showNextImage}
-            onSelect={setActiveImage}
-            position="left"
-          />
+        <div
+          className={cn(
+            "grid gap-0",
+            images.length &&
+              "lg:grid-cols-[minmax(18rem,0.78fr)_minmax(0,1.22fr)]",
+          )}
+        >
+          {images.length ? (
+            <PostImageGallery
+              images={images}
+              currentImage={currentImage}
+              activeImage={activeImage}
+              onPrevious={showPreviousImage}
+              onNext={showNextImage}
+              onSelect={setActiveImage}
+              position="left"
+            />
+          ) : null}
 
           <div className="flex min-w-0 flex-col justify-between p-5">
             <div className="space-y-4">
@@ -1083,9 +1162,15 @@ const LostAndFoundPost = ({ post }) => {
                   <Avatar owner={owner} />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="truncate text-sm font-bold text-slate-950">
+                      <Link
+                        to={`/profile/${owner.username}`}
+                        className="truncate text-sm font-bold text-slate-950"
+                      >
                         {owner.name || owner.username || "Pluto member"}
-                      </h3>
+                      </Link>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+                      <span>{formatRelativeTime(post.created_at)}</span>
                       <span
                         className={cn(
                           "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ring-1",
@@ -1095,15 +1180,14 @@ const LostAndFoundPost = ({ post }) => {
                         <TypeIcon className="size-3.5" />
                         {config.label}
                       </span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-                      <span>{formatRelativeTime(post.created_at)}</span>
-                      {owner.username ? (
-                        <>
-                          <span className="size-1 rounded-full bg-slate-300" />
-                          <span>@{owner.username}</span>
-                        </>
-                      ) : null}
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold bg-slate-100",
+                        )}
+                      >
+                        <PawPrint className="size-3.5" />
+                        {post.lost_found_type}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1117,7 +1201,7 @@ const LostAndFoundPost = ({ post }) => {
                 </button>
               </div>
 
-              <div>
+              <div className="min-h-32">
                 <h2 className="text-2xl font-bold leading-tight text-slate-950">
                   {formatPostTitle(post)}
                 </h2>
@@ -1128,11 +1212,6 @@ const LostAndFoundPost = ({ post }) => {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <InfoTile
-                  icon={PawPrint}
-                  label="Pet type"
-                  value={post.lost_found_type || "Not provided"}
-                />
-                <InfoTile
                   icon={MapPin}
                   label="Last seen"
                   value={post.last_seen_location || "Not provided"}
@@ -1141,11 +1220,6 @@ const LostAndFoundPost = ({ post }) => {
                   icon={Clock}
                   label="Seen time"
                   value={formatDateTime(post.last_seen_at) || "Not provided"}
-                />
-                <InfoTile
-                  icon={Phone}
-                  label="Contact"
-                  value={post.contact || "Not provided"}
                 />
               </div>
             </div>
@@ -1351,21 +1425,7 @@ const PostImageGallery = ({
   position = "right",
 }) => {
   if (!images.length) {
-    return (
-      <div
-        className={cn(
-          "flex min-h-48 items-center justify-center border-slate-100 bg-slate-50 text-slate-400",
-          position === "left"
-            ? "border-b lg:border-b-0 lg:border-r"
-            : "border-t lg:border-l lg:border-t-0",
-        )}
-      >
-        <div className="text-center">
-          <ImageOff className="mx-auto size-8" />
-          <p className="mt-2 text-xs font-semibold">No photos</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -1374,7 +1434,7 @@ const PostImageGallery = ({
         "relative min-h-64 overflow-hidden border-slate-100 bg-slate-100",
         position === "left"
           ? "border-b lg:border-b-0 lg:border-r"
-          : "border-t lg:border-l lg:border-t-0",
+          : "w-full shrink-0 border-t lg:w-80 lg:border-l lg:border-t-0 xl:w-72",
       )}
     >
       <img

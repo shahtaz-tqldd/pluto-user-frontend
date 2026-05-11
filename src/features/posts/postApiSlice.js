@@ -15,10 +15,20 @@ export const postApiSlice = apiSlice.injectEndpoints({
     }),
 
     postList: builder.query({
-      query: () => ({
-        url: "/posts/",
-        method: "GET",
-      }),
+      query: ({ search, postType, helpCategory } = {}) => {
+        const params = new URLSearchParams();
+
+        if (search) params.set("search", search);
+        if (postType) params.set("postType", postType);
+        if (helpCategory) params.set("helpCategory", helpCategory);
+
+        const queryString = params.toString();
+
+        return {
+          url: `/posts/${queryString ? `?${queryString}` : ""}`,
+          method: "GET",
+        };
+      },
       providesTags: ["posts"],
     }),
 

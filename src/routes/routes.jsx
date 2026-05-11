@@ -10,6 +10,7 @@ import FeedPage from "@/pages/feeds";
 import ProfilePage from "@/pages/profile";
 import PetThreadPage from "@/pages/pets/threads";
 import CommunityPage from "@/pages/community";
+import ChatPage from "@/pages/chat";
 
 export const routes = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ export const routes = createBrowserRouter([
       {
         path: "/feeds",
         element: <FeedPage />,
+      },
+      {
+        path: "/chat",
+        element: <ChatPage />,
       },
       {
         path: "/settings",
