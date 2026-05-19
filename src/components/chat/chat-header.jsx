@@ -1,9 +1,24 @@
 import React from "react";
-import { Info, MoreVertical, Phone, Video } from "lucide-react";
+import {
+  Ban,
+  Flag,
+  Info,
+  MoreVertical,
+  Phone,
+  Trash2,
+  Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils";
 
-const ChatHeader = ({ conversation }) => {
+const ChatHeader = ({ conversation, isDetailsOpen, onToggleDetails }) => {
   return (
     <header className="flex shrink-0 items-center gap-3 border-b border-primary/10 bg-white px-4 py-3">
       <div className="relative">
@@ -49,24 +64,44 @@ const ChatHeader = ({ conversation }) => {
         >
           <Video className="size-4" />
         </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="rounded-full text-slate-600 hover:bg-primary/5 hover:text-primary lg:hidden"
-          aria-label="Conversation details"
-        >
-          <Info className="size-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="rounded-full text-slate-600 hover:bg-primary/5 hover:text-primary"
-          aria-label="More chat actions"
-        >
-          <MoreVertical className="size-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="rounded-full text-slate-600 hover:bg-primary/5 hover:text-primary"
+              aria-label="More chat actions"
+            >
+              <MoreVertical className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-fit rounded-xl p-1">
+            <DropdownMenuItem
+              onClick={onToggleDetails}
+              className="rounded-lg px-3 py-2 text-sm"
+            >
+              <Info className="size-4" />
+              {isDetailsOpen ? "Hide details" : "View details"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm">
+              <Ban className="size-4" />
+              Block
+            </DropdownMenuItem>
+            <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm">
+              <Flag className="size-4" />
+              Report
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              className="rounded-lg px-3 py-2 text-sm"
+            >
+              <Trash2 className="size-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

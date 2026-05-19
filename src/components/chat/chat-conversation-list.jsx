@@ -6,20 +6,55 @@ import { cn, getInitials } from "@/lib/utils";
 const ChatConversationList = ({
   conversations,
   activeConversationId,
+  activeTab,
+  tabCounts,
   searchTerm,
+  onTabChange,
   onSearchChange,
   onSelectConversation,
 }) => {
+  const tabs = [
+    { value: "ongoing", label: "Ongoing" },
+    { value: "request", label: "Request" },
+    { value: "blocked", label: "Blocked" },
+  ];
+
   return (
-    <aside className="flex h-full min-h-0 flex-col border-b border-primary/10 bg-white lg:w-[21rem] lg:border-b-0 lg:border-r">
-      <div className="shrink-0 space-y-4 border-b border-primary/10 p-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-950">
-            Messages
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Adoption chats and rescue updates
-          </p>
+    <aside className="flex h-full min-h-0 flex-col border-b border-primary/10 lg:w-[22rem] lg:border-b-0 lg:border-r">
+      <div className="shrink-0 space-y-4 border-b border-primary/10 py-3 pr-3">
+        <div className="grid grid-cols-3 gap-1 rounded-full border border-primary/10 bg-[#f6faf7] p-1">
+          {tabs.map((tab) => {
+            const isActive = tab.value === activeTab;
+            const count = tabCounts?.[tab.value] || 0;
+
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => onTabChange(tab.value)}
+                className={cn(
+                  "flex h-9 min-w-0 items-center justify-center gap-1 rounded-full px-2 text-xs font-semibold transition",
+                  isActive
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-slate-500 hover:bg-white hover:text-primary",
+                )}
+              >
+                <span className="truncate">{tab.label}</span>
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      "inline-flex min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold",
+                      isActive
+                        ? "bg-white text-primary"
+                        : "bg-[#ffcf36] text-slate-950",
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <label className="relative block">
@@ -34,7 +69,7 @@ const ChatConversationList = ({
         </label>
       </div>
 
-      <div className="custom-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+      <div className="custom-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto py-3 pr-3">
         {conversations.length > 0 ? (
           conversations.map((conversation) => {
             const isActive = conversation.id === activeConversationId;
@@ -47,7 +82,7 @@ const ChatConversationList = ({
                 className={cn(
                   "flex w-full items-start gap-3 rounded-2xl p-3 text-left transition",
                   isActive
-                    ? "bg-primary text-white shadow-[0_14px_34px_rgba(209,70,28,0.22)]"
+                    ? "bg-primary text-white"
                     : "bg-white hover:bg-primary/5",
                 )}
               >
@@ -69,14 +104,6 @@ const ChatConversationList = ({
                     >
                       {conversation.lastTime}
                     </span>
-                  </span>
-                  <span
-                    className={cn(
-                      "mt-1 block truncate text-xs font-medium",
-                      isActive ? "text-white/80" : "text-primary",
-                    )}
-                  >
-                    {conversation.petName}
                   </span>
                   <span
                     className={cn(

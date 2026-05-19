@@ -13,6 +13,7 @@ const conversations = [
     petType: "Dog",
     petAge: "2 years",
     status: "Home visit pending",
+    conversationType: "request",
     location: "Banani, Dhaka",
     meetup: "Tomorrow, 4:30 PM",
     lastTime: "2m",
@@ -21,6 +22,12 @@ const conversations = [
     petImage:
       "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=900&q=80",
     checklist: ["Share home photos", "Confirm pickup time", "Bring ID copy"],
+    sharedImages: [
+      "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1601758063541-d2f50b4aafb2?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&q=80",
+    ],
+    sharedFiles: ["home-visit-checklist.pdf", "adoption-form-maya.pdf"],
   },
   {
     id: "arif-milo",
@@ -29,6 +36,7 @@ const conversations = [
     petType: "Cat",
     petAge: "8 months",
     status: "Application review",
+    conversationType: "request",
     location: "Dhanmondi, Dhaka",
     meetup: "Friday, 6:00 PM",
     lastTime: "18m",
@@ -37,6 +45,11 @@ const conversations = [
     petImage:
       "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=900&q=80",
     checklist: ["Review application", "Ask about other pets", "Schedule call"],
+    sharedImages: [
+      "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?auto=format&fit=crop&w=400&q=80",
+    ],
+    sharedFiles: ["milo-application.pdf", "rental-approval.pdf"],
   },
   {
     id: "sadia-luna",
@@ -45,6 +58,7 @@ const conversations = [
     petType: "Rabbit",
     petAge: "1 year",
     status: "Ready for adoption",
+    conversationType: "ongoing",
     location: "Uttara, Dhaka",
     meetup: "Saturday, 11:00 AM",
     lastTime: "1h",
@@ -53,6 +67,11 @@ const conversations = [
     petImage:
       "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=900&q=80",
     checklist: ["Explain diet", "Share enclosure guide", "Confirm transport"],
+    sharedImages: [
+      "https://images.unsplash.com/photo-1591382386627-349b692688ff?auto=format&fit=crop&w=400&q=80",
+      "https://images.unsplash.com/photo-1589933767411-38a58367efd7?auto=format&fit=crop&w=400&q=80",
+    ],
+    sharedFiles: ["rabbit-care-guide.pdf"],
   },
   {
     id: "nabil-simba",
@@ -61,6 +80,7 @@ const conversations = [
     petType: "Cat",
     petAge: "3 years",
     status: "Follow-up",
+    conversationType: "blocked",
     location: "Mirpur, Dhaka",
     meetup: "Completed yesterday",
     lastTime: "Tue",
@@ -69,6 +89,10 @@ const conversations = [
     petImage:
       "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=900&q=80",
     checklist: ["Check first week", "Send vaccine card", "Close adoption"],
+    sharedImages: [
+      "https://images.unsplash.com/photo-1570824104453-508955ab713e?auto=format&fit=crop&w=400&q=80",
+    ],
+    sharedFiles: ["simba-vaccine-card.pdf", "handover-notes.txt"],
   },
 ];
 
@@ -160,11 +184,25 @@ const ChatPage = () => {
     conversations[0].id,
   );
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [activeConversationTab, setActiveConversationTab] =
+    React.useState("request");
+  const [isDetailsPanelOpen, setIsDetailsPanelOpen] = React.useState(false);
   const [draftMessage, setDraftMessage] = React.useState("");
   const [messagesByConversation, setMessagesByConversation] =
     React.useState(initialMessages);
 
+  const tabCounts = conversations.reduce(
+    (counts, conversation) => ({
+      ...counts,
+      [conversation.conversationType]:
+        counts[conversation.conversationType] + conversation.unread,
+    }),
+    { ongoing: 0, request: 0, blocked: 0 },
+  );
+
   const filteredConversations = conversations.filter((conversation) => {
+    if (conversation.conversationType !== activeConversationTab) return false;
+
     const searchContent = [
       conversation.personName,
       conversation.petName,
@@ -208,20 +246,52 @@ const ChatPage = () => {
     setDraftMessage("");
   };
 
+  const handleConversationTabChange = (tab) => {
+    setActiveConversationTab(tab);
+
+    const nextConversation = conversations.find((conversation) => {
+      if (conversation.conversationType !== tab) return false;
+
+      const searchContent = [
+        conversation.personName,
+        conversation.petName,
+        conversation.petType,
+        conversation.location,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchContent.includes(searchTerm.trim().toLowerCase());
+    });
+
+    if (nextConversation) {
+      setActiveConversationId(nextConversation.id);
+    }
+  };
+
   return (
-    <div className="py-4">
-      <section className="mx-auto flex h-[calc(100vh-6.5rem)] min-h-[38rem] overflow-hidden rounded-[28px] border border-primary/10 bg-white shadow-[0_18px_70px_rgba(2,24,19,0.07)]">
-        <div className="grid min-h-0 w-full grid-rows-[20rem_minmax(0,1fr)] lg:flex">
+    <div className="">
+      <section className="mx-auto flex h-[calc(100vh-6.5rem)] min-h-[38rem] overflow-hidden">
+        <div className="relative grid min-h-0 w-full grid-rows-[20rem_minmax(0,1fr)] lg:flex">
           <ChatConversationList
             conversations={filteredConversations}
             activeConversationId={activeConversation.id}
+            activeTab={activeConversationTab}
+            tabCounts={tabCounts}
             searchTerm={searchTerm}
+            onTabChange={handleConversationTabChange}
             onSearchChange={setSearchTerm}
             onSelectConversation={setActiveConversationId}
           />
 
           <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <ChatHeader conversation={activeConversation} />
+            <ChatHeader
+              conversation={activeConversation}
+              isDetailsOpen={isDetailsPanelOpen}
+              onToggleDetails={() =>
+                setIsDetailsPanelOpen((currentValue) => !currentValue)
+              }
+            />
             <ChatMessageList messages={activeMessages} />
             <ChatComposer
               value={draftMessage}
@@ -230,7 +300,13 @@ const ChatPage = () => {
             />
           </main>
 
-          <ChatDetailsPanel conversation={activeConversation} />
+          {isDetailsPanelOpen && (
+            <ChatDetailsPanel
+              conversation={activeConversation}
+              messages={activeMessages}
+              onClose={() => setIsDetailsPanelOpen(false)}
+            />
+          )}
         </div>
       </section>
     </div>
