@@ -1,5 +1,5 @@
 import React from "react";
-import { Search } from "lucide-react";
+import { FolderOpen, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn, getInitials } from "@/lib/utils";
 
@@ -63,7 +63,7 @@ const ChatConversationList = ({
           <Input
             value={searchTerm}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search people or pets"
+            placeholder="Search people"
             className="h-11 rounded-full border-primary/15 bg-[#fcfdfb] pl-10 shadow-none focus-visible:ring-2 focus-visible:ring-primary/20"
           />
         </label>
@@ -82,7 +82,7 @@ const ChatConversationList = ({
                 className={cn(
                   "flex w-full items-start gap-3 rounded-2xl p-3 text-left transition",
                   isActive
-                    ? "bg-primary text-white"
+                    ? "bg-primary/5 text-primary"
                     : "bg-white hover:bg-primary/5",
                 )}
               >
@@ -96,21 +96,11 @@ const ChatConversationList = ({
                     <span className="truncate text-sm font-semibold">
                       {conversation.personName}
                     </span>
-                    <span
-                      className={cn(
-                        "ml-auto shrink-0 text-xs",
-                        isActive ? "text-white/75" : "text-slate-400",
-                      )}
-                    >
+                    <span className="ml-auto shrink-0 text-[10px] text-slate-400">
                       {conversation.lastTime}
                     </span>
                   </span>
-                  <span
-                    className={cn(
-                      "mt-1 block truncate text-sm",
-                      isActive ? "text-white/80" : "text-slate-500",
-                    )}
-                  >
+                  <span className="mt-1 block truncate text-sm text-slate-400">
                     {conversation.lastMessage}
                   </span>
                 </span>
@@ -130,7 +120,8 @@ const ChatConversationList = ({
             );
           })
         ) : (
-          <div className="rounded-2xl border border-dashed border-primary/20 px-4 py-8 text-center text-sm text-slate-500">
+          <div className="px-4 py-12 text-center text-sm text-slate-400 flex flex-col items-center gap-2">
+            <FolderOpen strokeWidth={1} size={32} />
             No conversations found.
           </div>
         )}

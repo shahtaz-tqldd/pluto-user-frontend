@@ -63,12 +63,13 @@ const LoginPage = () => {
           <div>
             <img
               src="https://images.vexels.com/media/users/3/200040/isolated/preview/9960585fc70528e037e94ccee1e67363-orange-cat-illustration.png"
-              className="h-80 object-contain mb-6"
+              className="h-80 object-contain"
             />
 
             <div className="max-w-xl">
-              <h1 className="text-4xl text-orange-800 font-semibold leading-tight">
-                Pawpal helps stray animals finding their loving homes.
+              <h1 className="text-6xl text-primary font-semibold leading-tight">
+                connect, share <br />
+                and care.
               </h1>
             </div>
           </div>

@@ -4,210 +4,356 @@ import ChatConversationList from "@/components/chat/chat-conversation-list";
 import ChatDetailsPanel from "@/components/chat/chat-details-panel";
 import ChatHeader from "@/components/chat/chat-header";
 import ChatMessageList from "@/components/chat/chat-message-list";
+import {
+  useChatMessageListQuery,
+  useConversationListQuery,
+} from "@/features/chat/chatApiSlice";
+import { getTokens } from "@/hooks/useToken";
 
-const conversations = [
-  {
-    id: "maya-biscuit",
-    personName: "Maya Rahman",
-    petName: "Biscuit",
-    petType: "Dog",
-    petAge: "2 years",
-    status: "Home visit pending",
-    conversationType: "request",
-    location: "Banani, Dhaka",
-    meetup: "Tomorrow, 4:30 PM",
-    lastTime: "2m",
-    unread: 2,
-    lastMessage: "Can I meet Biscuit tomorrow afternoon?",
-    petImage:
-      "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=900&q=80",
-    checklist: ["Share home photos", "Confirm pickup time", "Bring ID copy"],
-    sharedImages: [
-      "https://images.unsplash.com/photo-1601758124510-52d02ddb7cbd?auto=format&fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1601758063541-d2f50b4aafb2?auto=format&fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&q=80",
-    ],
-    sharedFiles: ["home-visit-checklist.pdf", "adoption-form-maya.pdf"],
-  },
-  {
-    id: "arif-milo",
-    personName: "Arif Chowdhury",
-    petName: "Milo",
-    petType: "Cat",
-    petAge: "8 months",
-    status: "Application review",
-    conversationType: "request",
-    location: "Dhanmondi, Dhaka",
-    meetup: "Friday, 6:00 PM",
-    lastTime: "18m",
-    unread: 0,
-    lastMessage: "I have experience caring for rescued kittens.",
-    petImage:
-      "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=900&q=80",
-    checklist: ["Review application", "Ask about other pets", "Schedule call"],
-    sharedImages: [
-      "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?auto=format&fit=crop&w=400&q=80",
-    ],
-    sharedFiles: ["milo-application.pdf", "rental-approval.pdf"],
-  },
-  {
-    id: "sadia-luna",
-    personName: "Sadia Islam",
-    petName: "Luna",
-    petType: "Rabbit",
-    petAge: "1 year",
-    status: "Ready for adoption",
-    conversationType: "ongoing",
-    location: "Uttara, Dhaka",
-    meetup: "Saturday, 11:00 AM",
-    lastTime: "1h",
-    unread: 1,
-    lastMessage: "Is Luna comfortable around children?",
-    petImage:
-      "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&w=900&q=80",
-    checklist: ["Explain diet", "Share enclosure guide", "Confirm transport"],
-    sharedImages: [
-      "https://images.unsplash.com/photo-1591382386627-349b692688ff?auto=format&fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1589933767411-38a58367efd7?auto=format&fit=crop&w=400&q=80",
-    ],
-    sharedFiles: ["rabbit-care-guide.pdf"],
-  },
-  {
-    id: "nabil-simba",
-    personName: "Nabil Hasan",
-    petName: "Simba",
-    petType: "Cat",
-    petAge: "3 years",
-    status: "Follow-up",
-    conversationType: "blocked",
-    location: "Mirpur, Dhaka",
-    meetup: "Completed yesterday",
-    lastTime: "Tue",
-    unread: 0,
-    lastMessage: "Simba settled in well last night.",
-    petImage:
-      "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=900&q=80",
-    checklist: ["Check first week", "Send vaccine card", "Close adoption"],
-    sharedImages: [
-      "https://images.unsplash.com/photo-1570824104453-508955ab713e?auto=format&fit=crop&w=400&q=80",
-    ],
-    sharedFiles: ["simba-vaccine-card.pdf", "handover-notes.txt"],
-  },
-];
+const MESSAGE_PAGE_SIZE = 20;
 
-const initialMessages = {
-  "maya-biscuit": [
-    {
-      id: "m1",
-      sender: "them",
-      body: "Hi, I saw Biscuit's profile and wanted to ask if he is still available.",
-      time: "10:18 AM",
+const extractList = (response) => {
+  const data = response?.data ?? response;
+
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  if (Array.isArray(data?.messages)) return data.messages;
+
+  return [];
+};
+
+const getMeta = (response) => response?.meta || response?.data?.meta || {};
+
+const stripApiPath = (url) => url.replace(/\/api(?:\/v\d+)?\/?$/i, "");
+
+const getSocketBaseUrl = () => {
+  const baseUrl = import.meta.env.VITE_APP_BACKEND_SOCKET_URL;
+
+  if (!baseUrl) return "";
+
+  const absoluteUrl = /^wss?:\/\//i.test(baseUrl)
+    ? baseUrl
+    : /^https?:\/\//i.test(baseUrl)
+      ? baseUrl
+      : `${window.location.origin}${baseUrl.startsWith("/") ? "" : "/"}${baseUrl}`;
+
+  return stripApiPath(absoluteUrl).replace(/^http/i, "ws");
+};
+
+const buildChatSocketUrl = (conversationId) => {
+  const baseUrl = getSocketBaseUrl();
+
+  if (!baseUrl || !conversationId) return "";
+
+  const { accessToken } = getTokens();
+  const url = new URL(
+    `${baseUrl.replace(/\/$/, "")}/ws/chat/${conversationId}/`,
+  );
+
+  if (accessToken) url.searchParams.set("token", accessToken);
+
+  return url.toString();
+};
+
+const formatTime = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+const normalizeConversation = (conversation) => {
+  const user = conversation?.user || {};
+  const lastMessage = conversation?.last_message || {};
+
+  return {
+    id: conversation.id,
+    personName: user.name || user.username || "Participant",
+    username: user.username || "",
+    avatar: user.avatar || "",
+    location: user.location || "Location unavailable",
+    petName: "Conversation",
+    petType: "Pet",
+    status: conversation.status || "ongoing",
+    conversationType: conversation.is_blocked
+      ? "blocked"
+      : conversation.status || "ongoing",
+    meetup: "Schedule unavailable",
+    lastTime: formatTime(lastMessage.created_at || conversation.updated_at),
+    unread: conversation.unread_count || 0,
+    lastMessage: lastMessage.body || "No messages yet",
+    checklist: ["Placeholder"],
+    sharedImages: [],
+    sharedFiles: [],
+    raw: conversation,
+  };
+};
+
+const normalizeMessage = (message) => {
+  const isMine = Boolean(
+    message?.is_mine ||
+      message?.isMine ||
+      message?.sender === "me" ||
+      message?.sender_type === "me",
+  );
+  const body =
+    message?.body ||
+    message?.text ||
+    message?.content ||
+    message?.message ||
+    "";
+  const imageUrl = message?.image_url || message?.image || "";
+  const createdAt = message?.created_at || message?.timestamp || "";
+
+  return {
+    id:
+      message?.id ||
+      message?.message_id ||
+      message?.uuid ||
+      message?.client_id ||
+      message?.clientId ||
+      `${createdAt}-${isMine ? "me" : "them"}-${body || imageUrl}`,
+    clientId: message?.client_id || message?.clientId || null,
+    is_mine: isMine,
+    sender: isMine ? "me" : "them",
+    body,
+    messageType: message?.message_type || (imageUrl ? "image" : "text"),
+    imageUrl,
+    fileName: message?.file_name || "",
+    fileType: message?.file_type || "",
+    createdAt,
+    time: formatTime(createdAt),
+  };
+};
+
+const extractSocketMessages = (payload) => {
+  const data = payload?.data ?? payload;
+
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  if (Array.isArray(data?.messages)) return data.messages;
+  if (data?.message && typeof data.message === "object") return [data.message];
+  if (data?.body || data?.image_url || data?.image) return [data];
+
+  return [];
+};
+
+const mergeMessages = (...messageGroups) => {
+  const merged = [];
+
+  messageGroups.flat().forEach((message) => {
+    if (!message?.body && !message?.imageUrl) return;
+
+    const existingIndex = merged.findIndex(
+      (item) =>
+        item.id === message.id ||
+        (message.clientId && item.clientId === message.clientId),
+    );
+
+    if (existingIndex >= 0) {
+      const existingMessage = merged[existingIndex];
+      const shouldKeepMineState =
+        existingMessage.is_mine &&
+        existingMessage.clientId &&
+        existingMessage.clientId === message.clientId &&
+        !message.is_mine;
+
+      merged[existingIndex] = {
+        ...existingMessage,
+        ...message,
+        ...(shouldKeepMineState ? { is_mine: true, sender: "me" } : {}),
+      };
+    } else {
+      merged.push(message);
+    }
+  });
+
+  return merged.sort(sortMessagesByCreatedAt);
+};
+
+const sortMessagesByCreatedAt = (first, second) => {
+  const firstDate = new Date(first.createdAt).getTime();
+  const secondDate = new Date(second.createdAt).getTime();
+
+  if (Number.isNaN(firstDate) || Number.isNaN(secondDate)) return 0;
+
+  return firstDate - secondDate;
+};
+
+const useChatSocket = ({ conversationId, enabled }) => {
+  const socketRef = React.useRef(null);
+  const reconnectTimerRef = React.useRef(null);
+  const reconnectAttemptRef = React.useRef(0);
+  const socketUrl = React.useMemo(
+    () => buildChatSocketUrl(conversationId),
+    [conversationId],
+  );
+  const [messageState, setMessageState] = React.useState({
+    conversationId,
+    items: [],
+  });
+  const [connectionState, setConnectionState] = React.useState("idle");
+
+  React.useEffect(() => {
+    if (!enabled || !socketUrl) return undefined;
+
+    let closedByEffect = false;
+
+    const connect = () => {
+      const socket = new WebSocket(socketUrl);
+      socketRef.current = socket;
+
+      socket.onopen = () => {
+        reconnectAttemptRef.current = 0;
+        setConnectionState("open");
+        socket.send(
+          JSON.stringify({
+            type: "join_chat",
+            event: "join_chat",
+            conversation_id: conversationId,
+          }),
+        );
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          const incomingMessages = extractSocketMessages(payload)
+            .map(normalizeMessage)
+            .filter((message) => message.body || message.imageUrl);
+
+          if (!incomingMessages.length) return;
+
+          setMessageState((current) => ({
+            conversationId,
+            items: mergeMessages(
+              current.conversationId === conversationId ? current.items : [],
+              incomingMessages,
+            ),
+          }));
+        } catch (error) {
+          console.error("Could not parse chat socket message:", error);
+        }
+      };
+
+      socket.onerror = () => {
+        setConnectionState("error");
+      };
+
+      socket.onclose = () => {
+        if (closedByEffect) return;
+
+        setConnectionState("closed");
+        const attempt = reconnectAttemptRef.current + 1;
+        reconnectAttemptRef.current = attempt;
+        const delay = Math.min(1000 * attempt, 5000);
+
+        reconnectTimerRef.current = window.setTimeout(connect, delay);
+      };
+    };
+
+    connect();
+
+    return () => {
+      closedByEffect = true;
+      window.clearTimeout(reconnectTimerRef.current);
+      socketRef.current?.close();
+      socketRef.current = null;
+    };
+  }, [conversationId, enabled, socketUrl]);
+
+  const sendMessage = React.useCallback(
+    ({ text }) => {
+      const socket = socketRef.current;
+
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        throw new Error("Chat socket is not connected.");
+      }
+
+      const body = text.trim();
+      const clientId = crypto.randomUUID();
+      const optimisticMessage = normalizeMessage({
+        client_id: clientId,
+        is_mine: true,
+        body,
+        message_type: "text",
+        created_at: new Date().toISOString(),
+      });
+
+      setMessageState((current) => ({
+        conversationId,
+        items: mergeMessages(
+          current.conversationId === conversationId ? current.items : [],
+          optimisticMessage,
+        ),
+      }));
+
+      socket.send(
+        JSON.stringify({
+          type: "message",
+          event: "message",
+          conversation_id: conversationId,
+          client_id: clientId,
+          message_type: "text",
+          body,
+          message: body,
+          text: body,
+        }),
+      );
     },
-    {
-      id: "m2",
-      sender: "me",
-      body: "Yes, Biscuit is still looking for a home. He is friendly, vaccinated, and very calm indoors.",
-      time: "10:21 AM",
-    },
-    {
-      id: "m3",
-      sender: "them",
-      body: "That sounds perfect. I live in Banani and can visit tomorrow afternoon if that works.",
-      time: "10:27 AM",
-    },
-    {
-      id: "m4",
-      sender: "me",
-      body: "Tomorrow works. Please bring a photo ID, and I will share the foster address after confirming the time.",
-      time: "10:31 AM",
-    },
-    {
-      id: "m5",
-      sender: "them",
-      body: "Can I meet Biscuit tomorrow afternoon?",
-      time: "10:34 AM",
-    },
-  ],
-  "arif-milo": [
-    {
-      id: "a1",
-      sender: "them",
-      body: "Hello, I submitted the adoption form for Milo.",
-      time: "9:05 AM",
-    },
-    {
-      id: "a2",
-      sender: "me",
-      body: "Thanks, Arif. I am reviewing it now. Do you currently have other pets at home?",
-      time: "9:12 AM",
-    },
-    {
-      id: "a3",
-      sender: "them",
-      body: "No pets right now, but I have experience caring for rescued kittens.",
-      time: "9:20 AM",
-    },
-  ],
-  "sadia-luna": [
-    {
-      id: "s1",
-      sender: "them",
-      body: "Is Luna comfortable around children?",
-      time: "8:44 AM",
-    },
-    {
-      id: "s2",
-      sender: "me",
-      body: "She is gentle, but she prefers quiet handling. I can share a care guide before the visit.",
-      time: "8:50 AM",
-    },
-  ],
-  "nabil-simba": [
-    {
-      id: "n1",
-      sender: "them",
-      body: "Simba settled in well last night. He explored the whole living room.",
-      time: "Tue",
-    },
-    {
-      id: "n2",
-      sender: "me",
-      body: "That is good to hear. Keep his food the same for the first week so the transition stays smooth.",
-      time: "Tue",
-    },
-  ],
+    [conversationId],
+  );
+
+  return {
+    messages:
+      messageState.conversationId === conversationId ? messageState.items : [],
+    connectionState:
+      enabled && !socketUrl ? "unavailable" : enabled ? connectionState : "idle",
+    sendMessage,
+  };
 };
 
 const ChatPage = () => {
-  const [activeConversationId, setActiveConversationId] = React.useState(
-    conversations[0].id,
-  );
+  const [activeConversationId, setActiveConversationId] = React.useState("");
   const [searchTerm, setSearchTerm] = React.useState("");
   const [activeConversationTab, setActiveConversationTab] =
-    React.useState("request");
+    React.useState("ongoing");
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = React.useState(false);
   const [draftMessage, setDraftMessage] = React.useState("");
-  const [messagesByConversation, setMessagesByConversation] =
-    React.useState(initialMessages);
+  const [messagePage, setMessagePage] = React.useState(1);
 
-  const tabCounts = conversations.reduce(
-    (counts, conversation) => ({
-      ...counts,
-      [conversation.conversationType]:
-        counts[conversation.conversationType] + conversation.unread,
-    }),
-    { ongoing: 0, request: 0, blocked: 0 },
+  const conversationListQuery = useConversationListQuery({
+    status: activeConversationTab,
+    page: 1,
+    pageSize: 20,
+  });
+  const conversations = React.useMemo(
+    () => extractList(conversationListQuery.data).map(normalizeConversation),
+    [conversationListQuery.data],
   );
+  const conversationMeta = getMeta(conversationListQuery.data);
+  const tabCounts = {
+    ongoing:
+      activeConversationTab === "ongoing" ? conversationMeta.total_items || 0 : 0,
+    request:
+      activeConversationTab === "request" ? conversationMeta.total_items || 0 : 0,
+    blocked:
+      activeConversationTab === "blocked" ? conversationMeta.total_items || 0 : 0,
+  };
 
   const filteredConversations = conversations.filter((conversation) => {
-    if (conversation.conversationType !== activeConversationTab) return false;
-
     const searchContent = [
       conversation.personName,
-      conversation.petName,
-      conversation.petType,
+      conversation.username,
       conversation.location,
+      conversation.lastMessage,
     ]
       .join(" ")
       .toLowerCase();
@@ -218,55 +364,62 @@ const ChatPage = () => {
   const activeConversation =
     conversations.find(
       (conversation) => conversation.id === activeConversationId,
-    ) || conversations[0];
-  const activeMessages = messagesByConversation[activeConversation.id] || [];
+    ) || null;
+  const messageListQuery = useChatMessageListQuery(
+    {
+      conversationId: activeConversationId,
+      page: messagePage,
+      pageSize: MESSAGE_PAGE_SIZE,
+    },
+    { skip: !activeConversationId },
+  );
+  const messageMeta = getMeta(messageListQuery.data);
+  const apiMessages = React.useMemo(
+    () =>
+      extractList(messageListQuery.data)
+        .map(normalizeMessage)
+        .filter((message) => message.body || message.imageUrl)
+        .sort(sortMessagesByCreatedAt),
+    [messageListQuery.data],
+  );
+  const chatSocket = useChatSocket({
+    conversationId: activeConversationId,
+    enabled: Boolean(activeConversationId),
+  });
+  const activeMessages = React.useMemo(
+    () => mergeMessages(apiMessages, chatSocket.messages),
+    [apiMessages, chatSocket.messages],
+  );
+  const hasMoreMessages =
+    Boolean(activeConversationId) &&
+    (messageMeta.total_pages || 1) > messagePage;
 
   const sendMessage = () => {
     const body = draftMessage.trim();
 
-    if (!body) return;
+    if (!body || !activeConversation) return;
 
-    const time = new Intl.DateTimeFormat("en", {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(new Date());
-
-    setMessagesByConversation((currentMessages) => ({
-      ...currentMessages,
-      [activeConversation.id]: [
-        ...(currentMessages[activeConversation.id] || []),
-        {
-          id: `${activeConversation.id}-${Date.now()}`,
-          sender: "me",
-          body,
-          time,
-        },
-      ],
-    }));
-    setDraftMessage("");
+    try {
+      chatSocket.sendMessage({ text: body });
+      setDraftMessage("");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleConversationTabChange = (tab) => {
     setActiveConversationTab(tab);
+    setActiveConversationId("");
+    setMessagePage(1);
+    setDraftMessage("");
+    setIsDetailsPanelOpen(false);
+  };
 
-    const nextConversation = conversations.find((conversation) => {
-      if (conversation.conversationType !== tab) return false;
-
-      const searchContent = [
-        conversation.personName,
-        conversation.petName,
-        conversation.petType,
-        conversation.location,
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return searchContent.includes(searchTerm.trim().toLowerCase());
-    });
-
-    if (nextConversation) {
-      setActiveConversationId(nextConversation.id);
-    }
+  const handleSelectConversation = (conversationId) => {
+    setActiveConversationId(conversationId);
+    setMessagePage(1);
+    setDraftMessage("");
+    setIsDetailsPanelOpen(false);
   };
 
   return (
@@ -275,32 +428,46 @@ const ChatPage = () => {
         <div className="relative grid min-h-0 w-full grid-rows-[20rem_minmax(0,1fr)] lg:flex">
           <ChatConversationList
             conversations={filteredConversations}
-            activeConversationId={activeConversation.id}
+            activeConversationId={activeConversationId}
             activeTab={activeConversationTab}
             tabCounts={tabCounts}
             searchTerm={searchTerm}
             onTabChange={handleConversationTabChange}
             onSearchChange={setSearchTerm}
-            onSelectConversation={setActiveConversationId}
+            onSelectConversation={handleSelectConversation}
           />
 
           <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <ChatHeader
-              conversation={activeConversation}
-              isDetailsOpen={isDetailsPanelOpen}
-              onToggleDetails={() =>
-                setIsDetailsPanelOpen((currentValue) => !currentValue)
-              }
-            />
-            <ChatMessageList messages={activeMessages} />
-            <ChatComposer
-              value={draftMessage}
-              onChange={setDraftMessage}
-              onSend={sendMessage}
-            />
+            {activeConversation ? (
+              <>
+                <ChatHeader
+                  conversation={activeConversation}
+                  isDetailsOpen={isDetailsPanelOpen}
+                  onToggleDetails={() =>
+                    setIsDetailsPanelOpen((currentValue) => !currentValue)
+                  }
+                />
+                <ChatMessageList
+                  messages={activeMessages}
+                  hasMore={hasMoreMessages}
+                  isLoadingMore={messageListQuery.isFetching}
+                  onLoadMore={() => setMessagePage((page) => page + 1)}
+                />
+                <ChatComposer
+                  value={draftMessage}
+                  onChange={setDraftMessage}
+                  onSend={sendMessage}
+                />
+              </>
+            ) : (
+              <EmptyChatState
+                isLoading={conversationListQuery.isLoading}
+                activeTab={activeConversationTab}
+              />
+            )}
           </main>
 
-          {isDetailsPanelOpen && (
+          {isDetailsPanelOpen && activeConversation && (
             <ChatDetailsPanel
               conversation={activeConversation}
               messages={activeMessages}
@@ -312,5 +479,20 @@ const ChatPage = () => {
     </div>
   );
 };
+
+const EmptyChatState = ({ isLoading, activeTab }) => (
+  <div className="flex min-h-0 flex-1 items-center justify-center bg-[#fffaf5] px-6 text-center">
+    <div className="max-w-sm">
+      <p className="text-base font-semibold text-slate-900">
+        {isLoading ? "Loading conversations..." : "Select a conversation"}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        {isLoading
+          ? "The conversation list is being fetched."
+          : `No ${activeTab} conversation is open yet. Choose an item from the list to fetch its messages.`}
+      </p>
+    </div>
+  </div>
+);
 
 export default ChatPage;
